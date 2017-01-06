@@ -2,7 +2,6 @@ package ares
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -11,18 +10,18 @@ import (
 type ApacheLogRecord struct {
 	http.ResponseWriter
 
-	ip                    string
-	time                  time.Time
-	method, uri, protocol string
-	status                int
-	responseBytes         int64
-	elapsedTime           time.Duration
+	ip                          string
+	time                        time.Time
+	host, method, uri, protocol string
+	status                      int
+	responseBytes               int64
+	elapsedTime                 time.Duration
 }
 
-func (r *ApacheLogRecord) Log(out io.Writer) {
+func (r *ApacheLogRecord) Log(printFunc printFn) {
 	timeFormatted := r.time.Format("02/Jan/2006 03:04:05")
 	requestLine := fmt.Sprintf("%s %s %s", r.method, r.uri, r.protocol)
-	fmt.Fprintf(out, ApacheFormatPattern, r.ip, timeFormatted, requestLine, r.status, r.responseBytes,
+	printFunc(ApacheFormatPattern, r.ip, timeFormatted, r.host, requestLine, r.status, r.responseBytes,
 		r.elapsedTime.Seconds())
 }
 
@@ -38,14 +37,16 @@ func (r *ApacheLogRecord) WriteHeader(status int) {
 }
 
 type ApacheLoggingHandler struct {
-	handler http.Handler
-	out     io.Writer
+	handler   http.Handler
+	printFunc printFn
 }
 
-func NewApacheLoggingHandler(handler http.Handler, out io.Writer) http.Handler {
+type printFn func(string, ...interface{})
+
+func NewApacheLoggingHandler(handler http.Handler, printFunc printFn) http.Handler {
 	return &ApacheLoggingHandler{
-		handler: handler,
-		out:     out,
+		handler:   handler,
+		printFunc: printFunc,
 	}
 }
 
@@ -60,6 +61,7 @@ func (h *ApacheLoggingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request
 		ip:             clientIP,
 		time:           time.Time{},
 		method:         r.Method,
+		host:           r.Host,
 		uri:            r.RequestURI,
 		protocol:       r.Proto,
 		status:         http.StatusOK,
@@ -73,5 +75,5 @@ func (h *ApacheLoggingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request
 	record.time = finishTime.UTC()
 	record.elapsedTime = finishTime.Sub(startTime)
 
-	record.Log(h.out)
+	record.Log(h.printFunc)
 }

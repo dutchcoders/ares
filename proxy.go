@@ -95,6 +95,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	req.Header.Del("If-Modified-Since")
 	req.Header.Del("Referer")
 
+	defer req.Body.Close()
+
 	var body []byte
 	if body, err = ioutil.ReadAll(req.Body); err != nil {
 		log.Errorf("Error reading body: %s", err.Error())
@@ -162,7 +164,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	func() {
-		if resp.StatusCode > 300 {
+		if resp.StatusCode >= 300 {
 			return
 		}
 
@@ -368,18 +370,11 @@ func RedirectHandler() http.Handler {
 }
 
 const (
-	ApacheFormatPattern = "%s - - [%s] \"%s %d %d\" %f\n"
+	ApacheFormatPattern = "%s - - [%s] %s \"%s %d %d\" %f\n"
 )
 
 func (c *Proxy) ListenAndServe() {
 	log.Info("Starting Ares proxy....")
-
-	/*
-		c.Hosts = map[string]string{
-			"76sf66ytorch2vet.onion": "xmh57jrzrnw6insl.onion",
-		}
-	*/
-	log.Infof("%#v", c.Hosts)
 
 	var router = mux.NewRouter()
 
@@ -414,21 +409,24 @@ func (c *Proxy) ListenAndServe() {
 
 	router.NotFoundHandler = ph
 
-	backend1 := logging.NewLogBackend(os.Stderr, "", 0)
-	backend1Leveled := logging.AddModuleLevel(backend1)
-	backend1Leveled.SetLevel(logging.ERROR, "")
-	logging.SetBackend(backend1Leveled)
+	for _, l := range c.Logging {
 
-	//	if context.GlobalBool("debug") {
-	backend1Leveled.SetLevel(logging.INFO, "")
-	//	}
+		backend1 := logging.NewLogBackend(os.Stderr, "", 0)
+		backend1Leveled := logging.AddModuleLevel(backend1)
+		backend1Leveled.SetLevel(logging.ERROR, "")
+		logging.SetBackend(backend1Leveled)
 
-	lh := router // handlers.LogHandler(router, handlers.NewLogOptions(log.Debug, "_default_"))
-	// lh = NewApacheLoggingHandler(lh, os.Stdout)
+		level, err := logging.LogLevel(l.Level)
+		if err != nil {
+			panic(err)
+		}
+
+		backend1Leveled.SetLevel(level, "")
+	}
 
 	server := &http.Server{
 		Addr:    c.ListenerString,
-		Handler: NewApacheLoggingHandler(lh, os.Stdout),
+		Handler: NewApacheLoggingHandler(router, log.Infof),
 	}
 
 	if err := server.ListenAndServe(); err != nil {
