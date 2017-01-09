@@ -22,8 +22,11 @@ Ares allows security testers to create a phishing environment easily. Ares acts 
 
 ## Installation
 
+Make sure you have Go 1.7 installed. 
+
 ```
-go get github.com/dutchcoders/ares/cmd
+git clone git@github.com:dutchcoders/ares.git
+go run cmd/main.go  -c config.toml  
 ```
 
 ## Injects
