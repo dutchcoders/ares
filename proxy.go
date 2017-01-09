@@ -143,6 +143,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		break
 	}
 
+	if host == nil {
+		return
+	}
+
 	dump, _ := httputil.DumpRequest(req, false)
 	log.Debugf("Request: %s\n\n", string(dump))
 
