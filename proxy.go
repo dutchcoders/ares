@@ -68,7 +68,7 @@ type Proxy struct {
 
 	router *mux.Router
 
-	index chan Pair
+	index chan *Pair
 	p     *Proxy
 }
 
@@ -168,6 +168,8 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return
 	}
 
+	req.Body = ioutil.NopCloser(bytes.NewReader(body))
+
 	for _, action := range host.Actions {
 		if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
 		} else {
@@ -229,7 +231,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if action.Action == "redirect" {
 			r, w := io.Pipe()
 
-			resp := &http.Response{
+			resp = &http.Response{
 				Proto:      "HTTP/1.1",
 				ProtoMajor: 1,
 				ProtoMinor: 1,
@@ -249,12 +251,10 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				defer w.Close()
 				// w.Write([]byte("☄ HTTP status code returned!"))
 			}()
-
-			return resp, nil
 		} else if action.Action == "serve" {
 			r, w := io.Pipe()
 
-			resp := &http.Response{
+			resp = &http.Response{
 				Proto:      "HTTP/1.1",
 				ProtoMajor: 1,
 				ProtoMinor: 1,
@@ -268,15 +268,12 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			// prw := &pipeResponseWriter{r, w, resp, ready}
 
 			resp.Header.Add("Content-Type", "text/html")
-			resp.Header.Add("Location", action.Location)
 
 			go func() {
 				defer w.Close()
 
 				w.Write([]byte(action.Body))
 			}()
-
-			return resp, nil
 		} else if action.Action == "file" {
 			r, w := io.Pipe()
 
@@ -304,14 +301,11 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 					log.Errorf("Error opening file: %s: %s", action.File, err.Error())
 				}
 			}()
-
-			return resp, nil
 		}
-
 	}
 
-	req.Body = ioutil.NopCloser(bytes.NewReader(body))
-	if resp, err = t.RoundTripper.RoundTrip(req); err != nil {
+	if resp != nil {
+	} else if resp, err = t.RoundTripper.RoundTrip(req); err != nil {
 		return nil, err
 	}
 
@@ -334,8 +328,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
-
-	pair := Pair{
+	pair := &Pair{
 		Date:       time.Now(),
 		RemoteAddr: remoteHost,
 		Meta: map[string]interface {
@@ -358,6 +351,13 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			Body:          "",
 		},
 	}
+
+	defer func() {
+		dump, _ = httputil.DumpResponse(resp, false)
+		log.Debugf("Response: %s\n", string(dump))
+
+		t.Proxy.index <- pair
+	}()
 
 	// calculate hash
 	extension := ""
@@ -508,6 +508,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 				if action.Action == "inject" {
 					for _, script := range action.Scripts {
+						log.Infof("Injecting script %s.", script)
 						if b, err := ioutil.ReadFile(script); err != nil {
 							log.Errorf("Error injecting: %s", err.Error())
 						} else {
@@ -566,18 +567,13 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 	resp.Header.Del("Content-Length")
 
-	dump, _ = httputil.DumpResponse(resp, false)
-	log.Debugf("Response: %s\n", string(dump))
-
-	t.Proxy.index <- pair
-
 	return
 }
 
 func New() *Proxy {
 	c := cache.New(5*time.Minute, 30*time.Second)
 	return &Proxy{
-		index: make(chan Pair, 500),
+		index: make(chan *Pair, 500),
 		Cache: c,
 	}
 }
