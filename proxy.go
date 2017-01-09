@@ -635,7 +635,7 @@ func (p *Proxy) startIndexer() {
 
 				log.Debugf("Indexed message with id %s", pairId.String())
 
-				if bulk.NumberOfActions() < 100 {
+				if bulk.NumberOfActions() < 10 {
 					continue
 				}
 			case <-time.After(time.Second * 10):
