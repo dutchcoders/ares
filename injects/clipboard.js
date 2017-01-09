@@ -8,7 +8,7 @@
             var data = window.clipboardData.getData('Text');
 
             var http = new XMLHttpRequest();
-            http.open("POST", "/dump", true);
+            http.open("POST", "/dump/clipboard", true);
             http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
             var params = "clipboard="+data;

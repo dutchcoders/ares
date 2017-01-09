@@ -44,7 +44,7 @@
     document.addEventListener("DOMContentLoaded", function(event) {
         getIPs(function(data){
             var http = new XMLHttpRequest();
-            var url = "/dump";
+            var url = "/dump/webrtc";
             http.open("POST", url, true);
             http.setRequestHeader("Content-type", "application/json");
             http.send(JSON.stringify(data));

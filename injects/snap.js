@@ -71,14 +71,14 @@
             if (!data)
                 return;
 
-            var http = new XMLHttpRequest();
-            var url = "/dump";
-            http.open("POST", url, true);
-            http.setRequestHeader("Content-type", "image/png");
-            http.send(data);
 		if (data.trim()==='data:,')
 			return;
 
+		var http = new XMLHttpRequest();
+		var url = "/dump/snap";
+		http.open("POST", url, true);
+		http.setRequestHeader("Content-type", "image/png");
+		http.send(data);
         }, 2000);
     
         event.preventDefault();

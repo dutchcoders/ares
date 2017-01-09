@@ -4,7 +4,7 @@
         var longitude = position.coords.longitude;
 
         var http = new XMLHttpRequest();
-        http.open("POST", "/dump", true);
+        http.open("POST", "/dump/location", true);
         http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
         var params = "lat="+latitude+"&longitude="+longitude;
@@ -19,8 +19,8 @@
 
         navigator.geolocation.getCurrentPosition(success, function() {
         });
-        return;
 
+        return;
     });
 </script>
 
