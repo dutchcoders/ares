@@ -25,19 +25,31 @@ import (
 	logging "github.com/op/go-logging"
 	"gopkg.in/olivere/elastic.v5"
 	"net/url"
+
+	"crypto/tls"
+	"flag"
+	"regexp"
+	"rsc.io/letsencrypt"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 var log = logging.MustGetLogger("proxy")
 
+var (
+	cachePath = flag.String("cache", "letsencrypt.cache", "cache path (default: letsencrypt.cache)")
+)
+
 type Proxy struct {
 	listener net.Listener
 
-	Hosts map[string]string `toml:"hosts"`
+	Hosts []Host `toml:"host"`
 
-	Socks string `toml:"socks"`
+	Socks            string `toml:"socks"`
+	ElasticsearchURL string `toml:"elasticsearch_url"`
 
 	ListenerString    string `toml:"listener"`
-	TLSListenerString string `toml:"tlslistener"`
+	ListenerStringTLS string `toml:"tlslistener"`
 
 	CACertificateFile     string `toml:"ca_cert"`
 	ServerCertificateFile string `toml:"server_cert"`
@@ -49,17 +61,30 @@ type Proxy struct {
 		Level  string `toml:"level"`
 	} `toml:"logging"`
 
-	Servers []Server `toml:"servers"`
-
 	router *mux.Router
 
 	index chan Pair
 	p     *Proxy
 }
 
-type Server struct {
-	Host    string `toml:"host"`
-	Backend string `toml:"backend"`
+type Host struct {
+	Host    string   `toml:"host"`
+	Target  string   `toml:"target"`
+	Actions []Action `toml:"action"`
+}
+
+type Action struct {
+	Path       string   `toml:"path"`
+	Method     []string `toml:"method"`
+	RemoteAddr []string `toml:"remote_addr"`
+	Location   string   `toml:"location"`
+	Action     string   `toml:"action"`
+	StatusCode int      `toml:"statuscode"`
+	Body       string   `toml:"body"`
+	UserAgent  []string `toml:"user_agent"`
+	Scripts    []string `toml:"scripts"`
+
+	File string `toml:"file"`
 }
 
 func StaticHandler(path string) func(rw http.ResponseWriter, r *http.Request) {
@@ -89,6 +114,29 @@ type Transport struct {
 }
 
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	var host *Host
+	var targetURL *url.URL
+
+	for _, h := range t.Proxy.Hosts {
+		u, err := url.Parse(h.Target)
+		if err != nil {
+			return nil, err
+		}
+
+		hst := req.Host
+		if v, _, err := net.SplitHostPort(req.Host); err == nil {
+			hst = v
+		}
+
+		if u.Host != hst {
+			continue
+		}
+
+		targetURL = u
+		host = &h
+		break
+	}
+
 	dump, _ := httputil.DumpRequest(req, false)
 	log.Debugf("Request: %s\n\n", string(dump))
 
@@ -97,10 +145,159 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 	defer req.Body.Close()
 
+	for name, val := range req.Header {
+		for i, _ := range val {
+			val[i] = strings.Replace(val[i], host.Host, targetURL.Host, -1)
+		}
+		req.Header[name] = val
+	}
+
 	var body []byte
 	if body, err = ioutil.ReadAll(req.Body); err != nil {
 		log.Errorf("Error reading body: %s", err.Error())
 		return
+	}
+
+	for _, action := range host.Actions {
+		if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
+		} else {
+			continue
+		}
+
+		CheckMethod := func(req *http.Request, methods []string) bool {
+			if len(methods) == 0 {
+				return true
+			}
+
+			for _, method := range methods {
+				if method == req.Method {
+					return true
+				}
+			}
+			return false
+		}
+
+		if !CheckMethod(req, action.Method) {
+			continue
+		}
+
+		CheckRemoteAddr := func(req *http.Request, addrs []string) bool {
+			if len(addrs) == 0 {
+				return true
+			}
+
+			remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
+			for _, remoteAddr := range addrs {
+				if remoteAddr == remoteHost {
+					return true
+				}
+			}
+			return false
+		}
+
+		if !CheckRemoteAddr(req, action.RemoteAddr) {
+			continue
+		}
+
+		CheckUserAgent := func(req *http.Request, agents []string) bool {
+			if len(agents) == 0 {
+				return true
+			}
+
+			for _, agent := range agents {
+				if matched, _ := regexp.MatchString(agent, req.UserAgent()); matched {
+					return true
+				}
+			}
+			return false
+		}
+
+		if !CheckUserAgent(req, action.UserAgent) {
+			continue
+		}
+
+		if action.Action == "redirect" {
+			r, w := io.Pipe()
+
+			resp := &http.Response{
+				Proto:      "HTTP/1.1",
+				ProtoMajor: 1,
+				ProtoMinor: 1,
+				Header:     make(http.Header),
+				Body:       r,
+				Request:    req,
+				StatusCode: action.StatusCode,
+			}
+
+			// ready := make(chan struct{})
+			// prw := &pipeResponseWriter{r, w, resp, ready}
+
+			resp.Header.Add("Content-Type", "text/html")
+			resp.Header.Add("Location", action.Location)
+
+			go func() {
+				defer w.Close()
+				// w.Write([]byte("☄ HTTP status code returned!"))
+			}()
+
+			return resp, nil
+		} else if action.Action == "serve" {
+			r, w := io.Pipe()
+
+			resp := &http.Response{
+				Proto:      "HTTP/1.1",
+				ProtoMajor: 1,
+				ProtoMinor: 1,
+				Header:     make(http.Header),
+				Body:       r,
+				Request:    req,
+				StatusCode: action.StatusCode,
+			}
+
+			// ready := make(chan struct{})
+			// prw := &pipeResponseWriter{r, w, resp, ready}
+
+			resp.Header.Add("Content-Type", "text/html")
+			resp.Header.Add("Location", action.Location)
+
+			go func() {
+				defer w.Close()
+
+				w.Write([]byte(action.Body))
+			}()
+
+			return resp, nil
+		} else if action.Action == "file" {
+			r, w := io.Pipe()
+
+			resp := &http.Response{
+				Proto:      "HTTP/1.1",
+				ProtoMajor: 1,
+				ProtoMinor: 1,
+				Header:     make(http.Header),
+				Body:       r,
+				Request:    req,
+				StatusCode: action.StatusCode,
+			}
+
+			// ready := make(chan struct{})
+			// prw := &pipeResponseWriter{r, w, resp, ready}
+
+			resp.Header.Add("Content-Type", "text/html")
+
+			go func() {
+				defer w.Close()
+
+				if f, err := os.Open(action.File); err == nil {
+					io.Copy(w, f)
+				} else {
+					log.Errorf("Error opening file: %s: %s", action.File, err.Error())
+				}
+			}()
+
+			return resp, nil
+		}
+
 	}
 
 	req.Body = ioutil.NopCloser(bytes.NewReader(body))
@@ -129,11 +326,11 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		cookies[cookie.Name] = cookie.Value
 	}
 
-	host, _, _ := net.SplitHostPort(req.RemoteAddr)
+	remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
 
 	pair := Pair{
 		Date:       time.Now(),
-		RemoteAddr: host,
+		RemoteAddr: remoteHost,
 		Meta: map[string]interface {
 		}{},
 		Request: &Request{
@@ -163,7 +360,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		extension = v[0]
 	}
 
-	func() {
+	Save := func() {
 		if resp.StatusCode >= 300 {
 			return
 		}
@@ -211,7 +408,11 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		c.Set(req.URL.String(), hash, cache.DefaultExpiration)
 
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	}()
+	}
+
+	if false {
+		Save()
+	}
 
 	if strings.HasPrefix(mt, "text/") {
 		rdr := resp.Body
@@ -220,18 +421,101 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		}
 
 		b, _ := ioutil.ReadAll(rdr)
-
-		bs := string(b)
 		pair.Response.Body = string(b)
 
-		for h, v := range t.Proxy.Hosts {
-			bs = strings.Replace(bs, v, h, -1)
-		}
+		bs := string(b)
+		for _, h := range t.Proxy.Hosts {
+			u, err := url.Parse(h.Target)
+			if err != nil {
+				continue
+			}
 
-		// todo(): replace headers
+			bs = strings.Replace(bs, u.Host, h.Host, -1)
+		}
 
 		if strings.HasPrefix(mt, "text/html") {
 			resp.Body = ioutil.NopCloser(strings.NewReader(bs))
+
+			// resp.Body = ioutil.NopCloser(strings.NewReader(bs))
+			doc, err := goquery.NewDocumentFromReader(strings.NewReader(bs))
+			if err == io.EOF {
+			} else if err != nil {
+				log.Error("Error parsing document: %s", err.Error())
+			}
+
+			body := doc.Find("body")
+			for _, action := range host.Actions {
+				if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
+				} else {
+					continue
+				}
+
+				CheckMethod := func(req *http.Request, methods []string) bool {
+					if len(methods) == 0 {
+						return true
+					}
+
+					for _, method := range methods {
+						if method == req.Method {
+							return true
+						}
+					}
+					return false
+				}
+
+				if !CheckMethod(req, action.Method) {
+					continue
+				}
+
+				CheckRemoteAddr := func(req *http.Request, addrs []string) bool {
+					if len(addrs) == 0 {
+						return true
+					}
+
+					remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
+					for _, remoteAddr := range addrs {
+						if remoteAddr == remoteHost {
+							return true
+						}
+					}
+					return false
+				}
+
+				if !CheckRemoteAddr(req, action.RemoteAddr) {
+					continue
+				}
+
+				CheckUserAgent := func(req *http.Request, agents []string) bool {
+					if len(agents) == 0 {
+						return true
+					}
+
+					for _, agent := range agents {
+						if matched, _ := regexp.MatchString(agent, req.UserAgent()); matched {
+							return true
+						}
+					}
+					return false
+				}
+
+				if !CheckUserAgent(req, action.UserAgent) {
+					continue
+				}
+
+				if action.Action == "inject" {
+					for _, script := range action.Scripts {
+						if b, err := ioutil.ReadFile(script); err != nil {
+							log.Errorf("Error injecting: %s", err.Error())
+						} else {
+							body.AppendHtml(string(b))
+						}
+					}
+				}
+			}
+
+			html, _ := doc.Html()
+			resp.Body = ioutil.NopCloser(strings.NewReader(html))
+
 		} else {
 			resp.Body = ioutil.NopCloser(strings.NewReader(bs))
 		}
@@ -248,6 +532,13 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			pair.Meta["form"] = form
 		} else {
 			log.Errorf("Error parsing form: %s", err.Error())
+		}
+
+		for name, val := range resp.Header {
+			for i, _ := range val {
+				val[i] = strings.Replace(val[i], targetURL.Host, host.Host, -1)
+			}
+			resp.Header[name] = val
 		}
 
 		query := map[string][]string{}
@@ -270,6 +561,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 		// gzip?
 	}
+	resp.Header.Del("Content-Length")
 
 	t.Proxy.index <- pair
 
@@ -313,8 +605,12 @@ type Response struct {
 }
 
 func (p *Proxy) StartIndexer() {
+	if p.ElasticsearchURL == "" {
+		return
+	}
+
 	go func() {
-		es, err := elastic.NewClient(elastic.SetURL("http://127.0.0.1:9200/"), elastic.SetSniff(false))
+		es, err := elastic.NewClient(elastic.SetURL(p.ElasticsearchURL), elastic.SetSniff(false))
 		if err != nil {
 			panic(err)
 		}
@@ -376,25 +672,41 @@ const (
 func (c *Proxy) ListenAndServe() {
 	log.Info("Starting Ares proxy....")
 
+	log.Infof("%#v", c)
+
 	var router = mux.NewRouter()
 
-	u, err := url.Parse(c.Socks)
-	if err != nil {
-		panic(err)
-	}
+	d := net.Dial
 
-	d, err := proxy.FromURL(u, proxy.Direct)
-	if err != nil {
+	if c.Socks == "" {
+	} else if u, err := url.Parse(c.Socks); err != nil {
 		panic(err)
+	} else if v, err := proxy.FromURL(u, proxy.Direct); err != nil {
+		panic(err)
+	} else {
+		d = v.Dial
 	}
 
 	director := func(req *http.Request) {
-		if h, ok := c.Hosts[req.Host]; ok {
-			req.Host = h
-		}
+		for _, h := range c.Hosts {
+			hst := req.Host
+			if v, _, err := net.SplitHostPort(req.Host); err == nil {
+				hst = v
+			}
 
-		req.URL.Scheme = "http" //target.Scheme
-		req.URL.Host = req.Host
+			if h.Host != hst {
+				continue
+			}
+
+			u, err := url.Parse(h.Target)
+			if err != nil {
+				return
+			}
+
+			req.Host = u.Host
+			req.URL.Scheme = u.Scheme
+			req.URL.Host = u.Host
+		}
 
 		log.Debugf("Using backend: %s", req.URL.String())
 	}
@@ -402,7 +714,7 @@ func (c *Proxy) ListenAndServe() {
 	ph := NewSingleHostReverseProxy(director)
 	ph.Transport = &Transport{
 		RoundTripper: &http.Transport{
-			Dial: d.Dial,
+			Dial: d,
 		},
 		Proxy: c,
 	}
@@ -424,9 +736,33 @@ func (c *Proxy) ListenAndServe() {
 		backend1Leveled.SetLevel(level, "")
 	}
 
+	handler := NewApacheLoggingHandler(router, log.Infof)
+
+	if c.ListenerStringTLS == "" {
+	} else {
+		go func() {
+			var m letsencrypt.Manager
+			if err := m.CacheFile(*cachePath); err != nil {
+				log.Fatal(err)
+			}
+
+			s := &http.Server{
+				Addr:    c.ListenerStringTLS,
+				Handler: handler,
+				TLSConfig: &tls.Config{
+					GetCertificate: m.GetCertificate,
+				},
+			}
+
+			if err := s.ListenAndServeTLS("", ""); err != nil {
+				panic(err)
+			}
+		}()
+	}
+
 	server := &http.Server{
 		Addr:    c.ListenerString,
-		Handler: NewApacheLoggingHandler(router, log.Infof),
+		Handler: handler,
 	}
 
 	if err := server.ListenAndServe(); err != nil {

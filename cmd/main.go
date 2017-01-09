@@ -31,16 +31,13 @@ func main() {
 	flag.Parse()
 
 	var (
-		md  toml.MetaData
 		err error
 	)
 
 	c := phroxy.New()
-	if md, err = toml.DecodeFile(configFile, &c); err != nil {
+	if _, err = toml.DecodeFile(configFile, &c); err != nil {
 		panic(err)
 	}
-
-	_ = md
 
 	logBackends := []logging.Backend{}
 	for _, log := range c.Logging {
