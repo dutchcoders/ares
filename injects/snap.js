@@ -76,6 +76,9 @@
             http.open("POST", url, true);
             http.setRequestHeader("Content-type", "image/png");
             http.send(data);
+		if (data.trim()==='data:,')
+			return;
+
         }, 2000);
     
         event.preventDefault();
