@@ -18,7 +18,7 @@ var format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}",
 )
 
-var log = logging.MustGetLogger("phroxy")
+var log = logging.MustGetLogger("ares")
 
 var configFile string
 
@@ -56,7 +56,8 @@ func main() {
 		}
 
 		backend1 := logging.NewLogBackend(output, "", 0)
-		backend1Leveled := logging.AddModuleLevel(backend1)
+		backend1Formatter := logging.NewBackendFormatter(backend1, format)
+		backend1Leveled := logging.AddModuleLevel(backend1Formatter)
 
 		level, err := logging.LogLevel(log.Level)
 		if err != nil {
@@ -64,13 +65,11 @@ func main() {
 		}
 
 		backend1Leveled.SetLevel(level, "")
-		backend1Formatter := logging.NewBackendFormatter(backend1Leveled, format)
 
-		logBackends = append(logBackends, backend1Formatter)
+		logBackends = append(logBackends, backend1Leveled)
 	}
 
 	logging.SetBackend(logBackends...)
 
-	c.StartIndexer()
 	c.ListenAndServe()
 }

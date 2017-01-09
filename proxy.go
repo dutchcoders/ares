@@ -32,9 +32,10 @@ import (
 	"rsc.io/letsencrypt"
 
 	"github.com/PuerkitoBio/goquery"
+	"path"
 )
 
-var log = logging.MustGetLogger("proxy")
+var log = logging.MustGetLogger("ares:proxy")
 
 var (
 	cachePath = flag.String("cache", "letsencrypt.cache", "cache path (default: letsencrypt.cache)")
@@ -51,6 +52,8 @@ type Proxy struct {
 	ListenerString    string `toml:"listener"`
 	ListenerStringTLS string `toml:"tlslistener"`
 
+	Data string `toml:"data"`
+
 	CACertificateFile     string `toml:"ca_cert"`
 	ServerCertificateFile string `toml:"server_cert"`
 	ServerKeyFile         string `toml:"server_key"`
@@ -60,6 +63,8 @@ type Proxy struct {
 		Output string `toml:"output"`
 		Level  string `toml:"level"`
 	} `toml:"logging"`
+
+	Cache *cache.Cache
 
 	router *mux.Router
 
@@ -110,6 +115,7 @@ func StaticHandler(path string) func(rw http.ResponseWriter, r *http.Request) {
 
 type Transport struct {
 	http.RoundTripper
+
 	Proxy *Proxy
 }
 
@@ -305,9 +311,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 
-	dump, _ = httputil.DumpResponse(resp, false)
-	log.Debugf("Response: %s\n", string(dump))
-
 	contentType := ""
 	if val := resp.Header.Get("Content-Type"); val != "" {
 		contentType = val
@@ -385,7 +388,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		hash := fmt.Sprintf("%x", hasher.Sum(nil))
 		pair.Response.Hash.SHA256 = hash
 
-		path := fmt.Sprintf("/data/%s/%s/%s", req.URL.Host, string(hash[0]), string(hash[1]))
+		path := path.Join(t.Proxy.Data, fmt.Sprintf("/%s/%s/%s", req.URL.Host, string(hash[0]), string(hash[1])))
 
 		for {
 			if _, err := os.Stat(fmt.Sprintf("%s/%s%s", path, hash, extension)); os.IsNotExist(err) {
@@ -403,14 +406,12 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			break
 		}
 
-		// we should see if we can .Write to body conn
-		c := cache.New(5*time.Minute, 30*time.Second)
-		c.Set(req.URL.String(), hash, cache.DefaultExpiration)
+		t.Proxy.Cache.Set(req.URL.String(), hash, cache.DefaultExpiration)
 
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}
 
-	if false {
+	if t.Proxy.Data != "" {
 		Save()
 	}
 
@@ -436,7 +437,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		if strings.HasPrefix(mt, "text/html") {
 			resp.Body = ioutil.NopCloser(strings.NewReader(bs))
 
-			// resp.Body = ioutil.NopCloser(strings.NewReader(bs))
 			doc, err := goquery.NewDocumentFromReader(strings.NewReader(bs))
 			if err == io.EOF {
 			} else if err != nil {
@@ -515,7 +515,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 			html, _ := doc.Html()
 			resp.Body = ioutil.NopCloser(strings.NewReader(html))
-
 		} else {
 			resp.Body = ioutil.NopCloser(strings.NewReader(bs))
 		}
@@ -563,14 +562,19 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 	resp.Header.Del("Content-Length")
 
+	dump, _ = httputil.DumpResponse(resp, false)
+	log.Debugf("Response: %s\n", string(dump))
+
 	t.Proxy.index <- pair
 
 	return
 }
 
 func New() *Proxy {
+	c := cache.New(5*time.Minute, 30*time.Second)
 	return &Proxy{
 		index: make(chan Pair, 500),
+		Cache: c,
 	}
 }
 
@@ -604,7 +608,7 @@ type Response struct {
 	} `json:"hashes"`
 }
 
-func (p *Proxy) StartIndexer() {
+func (p *Proxy) startIndexer() {
 	if p.ElasticsearchURL == "" {
 		return
 	}
@@ -670,9 +674,10 @@ const (
 )
 
 func (c *Proxy) ListenAndServe() {
-	log.Info("Starting Ares proxy....")
+	log.Info("Ares started....")
+	defer log.Info("Ares stopped....")
 
-	log.Infof("%#v", c)
+	c.startIndexer()
 
 	var router = mux.NewRouter()
 
@@ -720,21 +725,6 @@ func (c *Proxy) ListenAndServe() {
 	}
 
 	router.NotFoundHandler = ph
-
-	for _, l := range c.Logging {
-
-		backend1 := logging.NewLogBackend(os.Stderr, "", 0)
-		backend1Leveled := logging.AddModuleLevel(backend1)
-		backend1Leveled.SetLevel(logging.ERROR, "")
-		logging.SetBackend(backend1Leveled)
-
-		level, err := logging.LogLevel(l.Level)
-		if err != nil {
-			panic(err)
-		}
-
-		backend1Leveled.SetLevel(level, "")
-	}
 
 	handler := NewApacheLoggingHandler(router, log.Infof)
 
