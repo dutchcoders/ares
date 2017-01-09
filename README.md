@@ -44,6 +44,7 @@ listener = "127.0.0.1:8080"
 tlslistener = "127.0.0.1:8443"
 
 data = "/data"
+elasticsearch_url = "http://127.0.0.1:9200/"
 
 #socks = "socks4://127.0.0.1:9050"
 
