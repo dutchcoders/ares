@@ -89,7 +89,9 @@ type Action struct {
 	UserAgent  []string `toml:"user_agent"`
 	Scripts    []string `toml:"scripts"`
 
-	File string `toml:"file"`
+	Regex   string `toml:"regex"`
+	Replace string `toml:"replace"`
+	File    string `toml:"file"`
 }
 
 func StaticHandler(path string) func(rw http.ResponseWriter, r *http.Request) {
@@ -478,6 +480,18 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 			}
 
 			html, _ := doc.Html()
+
+			for _, action := range host.Actions {
+				if !filter(action, req) {
+					continue
+				}
+
+				if action.Action == "replace" {
+					re := regexp.MustCompile(action.Regex)
+					html = re.ReplaceAllString(html, action.Replace)
+				}
+			}
+
 			resp.Body = ioutil.NopCloser(strings.NewReader(html))
 		} else {
 			resp.Body = ioutil.NopCloser(strings.NewReader(bs))
