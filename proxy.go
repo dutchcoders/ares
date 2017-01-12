@@ -144,6 +144,22 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	if host == nil {
+		r, w := io.Pipe()
+
+		resp = &http.Response{
+			Proto:      "HTTP/1.1",
+			ProtoMajor: 1,
+			ProtoMinor: 1,
+			Header:     make(http.Header),
+			Body:       r,
+			Request:    req,
+			StatusCode: 404,
+		}
+
+		go func() {
+			defer w.Close()
+			w.Write([]byte("Host not configured."))
+		}()
 		return
 	}
 
