@@ -265,9 +265,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				StatusCode: action.StatusCode,
 			}
 
-			// ready := make(chan struct{})
-			// prw := &pipeResponseWriter{r, w, resp, ready}
-
 			resp.Header.Add("Content-Type", "text/html")
 			resp.Header.Add("Location", action.Location)
 
@@ -287,9 +284,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 				Request:    req,
 				StatusCode: action.StatusCode,
 			}
-
-			// ready := make(chan struct{})
-			// prw := &pipeResponseWriter{r, w, resp, ready}
 
 			resp.Header.Add("Content-Type", "text/html")
 
@@ -339,12 +333,6 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	}
 
 	mt, _, _ := mime.ParseMediaType(contentType)
-
-	switch mt {
-	case "text/html":
-		// change cookie
-	case "text/javascript":
-	}
 
 	cookies := map[string]string{}
 	for _, cookie := range req.Cookies() {
