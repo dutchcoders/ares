@@ -119,6 +119,67 @@ type Transport struct {
 	Proxy *Proxy
 }
 
+func filter(action Action, req *http.Request) bool {
+	if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
+	} else {
+		return false
+	}
+
+	CheckMethod := func(req *http.Request, methods []string) bool {
+		if len(methods) == 0 {
+			return true
+		}
+
+		for _, method := range methods {
+			if method == req.Method {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !CheckMethod(req, action.Method) {
+		return false
+	}
+
+	CheckRemoteAddr := func(req *http.Request, addrs []string) bool {
+		if len(addrs) == 0 {
+			return true
+		}
+
+		remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
+		for _, remoteAddr := range addrs {
+			if remoteAddr == remoteHost {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !CheckRemoteAddr(req, action.RemoteAddr) {
+		return false
+	}
+
+	CheckUserAgent := func(req *http.Request, agents []string) bool {
+		if len(agents) == 0 {
+			return true
+		}
+
+		for _, agent := range agents {
+			if matched, _ := regexp.MatchString(agent, req.UserAgent()); matched {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !CheckUserAgent(req, action.UserAgent) {
+		return false
+	}
+
+	return true
+}
+
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	var host *Host
 	var targetURL *url.URL
@@ -187,60 +248,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	req.Body = ioutil.NopCloser(bytes.NewReader(body))
 
 	for _, action := range host.Actions {
-		if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
-		} else {
-			continue
-		}
-
-		CheckMethod := func(req *http.Request, methods []string) bool {
-			if len(methods) == 0 {
-				return true
-			}
-
-			for _, method := range methods {
-				if method == req.Method {
-					return true
-				}
-			}
-			return false
-		}
-
-		if !CheckMethod(req, action.Method) {
-			continue
-		}
-
-		CheckRemoteAddr := func(req *http.Request, addrs []string) bool {
-			if len(addrs) == 0 {
-				return true
-			}
-
-			remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
-			for _, remoteAddr := range addrs {
-				if remoteAddr == remoteHost {
-					return true
-				}
-			}
-			return false
-		}
-
-		if !CheckRemoteAddr(req, action.RemoteAddr) {
-			continue
-		}
-
-		CheckUserAgent := func(req *http.Request, agents []string) bool {
-			if len(agents) == 0 {
-				return true
-			}
-
-			for _, agent := range agents {
-				if matched, _ := regexp.MatchString(agent, req.UserAgent()); matched {
-					return true
-				}
-			}
-			return false
-		}
-
-		if !CheckUserAgent(req, action.UserAgent) {
+		if !filter(action, req) {
 			continue
 		}
 
@@ -465,60 +473,7 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 			body := doc.Find("body")
 			for _, action := range host.Actions {
-				if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
-				} else {
-					continue
-				}
-
-				CheckMethod := func(req *http.Request, methods []string) bool {
-					if len(methods) == 0 {
-						return true
-					}
-
-					for _, method := range methods {
-						if method == req.Method {
-							return true
-						}
-					}
-					return false
-				}
-
-				if !CheckMethod(req, action.Method) {
-					continue
-				}
-
-				CheckRemoteAddr := func(req *http.Request, addrs []string) bool {
-					if len(addrs) == 0 {
-						return true
-					}
-
-					remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
-					for _, remoteAddr := range addrs {
-						if remoteAddr == remoteHost {
-							return true
-						}
-					}
-					return false
-				}
-
-				if !CheckRemoteAddr(req, action.RemoteAddr) {
-					continue
-				}
-
-				CheckUserAgent := func(req *http.Request, agents []string) bool {
-					if len(agents) == 0 {
-						return true
-					}
-
-					for _, agent := range agents {
-						if matched, _ := regexp.MatchString(agent, req.UserAgent()); matched {
-							return true
-						}
-					}
-					return false
-				}
-
-				if !CheckUserAgent(req, action.UserAgent) {
+				if !filter(action, req) {
 					continue
 				}
 
