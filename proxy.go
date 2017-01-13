@@ -54,11 +54,6 @@ type Proxy struct {
 
 	Data string `toml:"data"`
 
-	CACertificateFile     string `toml:"ca_cert"`
-	ServerCertificateFile string `toml:"server_cert"`
-	ServerKeyFile         string `toml:"server_key"`
-	AuthType              string `toml:"authenticationtype"`
-
 	Logging []struct {
 		Output string `toml:"output"`
 		Level  string `toml:"level"`
