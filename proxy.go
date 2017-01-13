@@ -32,6 +32,7 @@ import (
 	"rsc.io/letsencrypt"
 
 	"github.com/PuerkitoBio/goquery"
+	"html/template"
 	"path"
 )
 
@@ -307,15 +308,16 @@ func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 
 			resp.Header.Add("Content-Type", "text/html")
 
-			go func() {
+			go func(action Action) {
 				defer w.Close()
 
-				if f, err := os.Open(action.File); err == nil {
-					io.Copy(w, f)
-				} else {
+				if tmpl, err := template.ParseFiles(action.File); err != nil {
 					log.Errorf("Error opening file: %s: %s", action.File, err.Error())
+				} else if err = tmpl.Execute(w, req); err != nil {
+					log.Errorf("Error opening file: %s: %s", action.File, err.Error())
+				} else {
 				}
-			}()
+			}(action)
 		}
 	}
 

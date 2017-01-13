@@ -10,7 +10,7 @@ Ares will work seamless with Gophish, where you'll use Ares for the landing page
 ## Features
 
 * transparant 1 to 1 of original site
-* modify specific paths to return other pages
+* modify specific paths to return static files, rendered as Go templates
 * create redirects (short urls)
 * inject scripts into target site
 * support ssl (using lets encrypt)
