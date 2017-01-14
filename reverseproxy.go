@@ -49,7 +49,7 @@ func singleJoiningSlash(a, b string) string {
 // URLs to the scheme, host, and base path provided in target. If the
 // target's path is "/base" and the incoming request was for "/dir",
 // the target request will be for /base/dir.
-func NewSingleHostReverseProxy(director func(req *http.Request)) *ReverseProxy {
+func NewReverseProxy(director func(req *http.Request)) *ReverseProxy {
 	return &ReverseProxy{
 		Director: director,
 	}

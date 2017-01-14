@@ -686,7 +686,7 @@ func (c *Proxy) ListenAndServe() {
 		log.Debugf("Using backend: %s", req.URL.String())
 	}
 
-	ph := NewSingleHostReverseProxy(director)
+	ph := NewReverseProxy(director)
 	ph.Transport = &Transport{
 		RoundTripper: &http.Transport{
 			Dial: d,
