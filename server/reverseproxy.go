@@ -1,4 +1,4 @@
-package ares
+package server
 
 import (
 	"io"
@@ -12,27 +12,6 @@ import (
 // flushLoop() goroutine.
 var onExitFlushLoop func()
 
-// ReverseProxy is an HTTP Handler that takes an incoming request and
-// sends it to another server, proxying the response back to the
-// client.
-type ReverseProxy struct {
-	// Director must be a function which modifies
-	// the request into a new request to be sent
-	// using Transport. Its response is then copied
-	// back to the original client unmodified.
-	Director func(*http.Request)
-
-	// The transport used to perform proxy requests.
-	// If nil, http.DefaultTransport is used.
-	Transport http.RoundTripper
-
-	// FlushInterval specifies the flush interval
-	// to flush to the client while copying the
-	// response body.
-	// If zero, no periodic flushing is done.
-	FlushInterval time.Duration
-}
-
 func singleJoiningSlash(a, b string) string {
 	aslash := strings.HasSuffix(a, "/")
 	bslash := strings.HasPrefix(b, "/")
@@ -43,16 +22,6 @@ func singleJoiningSlash(a, b string) string {
 		return a + "/" + b
 	}
 	return a + b
-}
-
-// NewSingleHostReverseProxy returns a new ReverseProxy that rewrites
-// URLs to the scheme, host, and base path provided in target. If the
-// target's path is "/base" and the incoming request was for "/dir",
-// the target request will be for /base/dir.
-func NewReverseProxy(director func(req *http.Request)) *ReverseProxy {
-	return &ReverseProxy{
-		Director: director,
-	}
 }
 
 func copyHeader(dst, src http.Header) {
@@ -98,44 +67,44 @@ func (c *runOnFirstRead) Read(bs []byte) (int, error) {
 	return c.Reader.Read(bs)
 }
 
-func (p *ReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	transport := p.Transport
-	if transport == nil {
-		transport = http.DefaultTransport
-	}
-
+func (p *Server) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	outreq := new(http.Request)
 	*outreq = *req // includes shallow copies of maps, but okay
 
-	if closeNotifier, ok := rw.(http.CloseNotifier); ok {
-		if requestCanceler, ok := transport.(requestCanceler); ok {
-			reqDone := make(chan struct{})
-			defer close(reqDone)
+	/*
+		if closeNotifier, ok := rw.(http.CloseNotifier); ok {
+			if requestCanceler, ok := p.(requestCanceler); ok {
+				reqDone := make(chan struct{})
+				defer close(reqDone)
 
-			clientGone := closeNotifier.CloseNotify()
+				clientGone := closeNotifier.CloseNotify()
 
-			outreq.Body = struct {
-				io.Reader
-				io.Closer
-			}{
-				Reader: &runOnFirstRead{
-					Reader: outreq.Body,
-					fn: func() {
-						go func() {
-							select {
-							case <-clientGone:
-								requestCanceler.CancelRequest(outreq)
-							case <-reqDone:
-							}
-						}()
+				outreq.Body = struct {
+					io.Reader
+					io.Closer
+				}{
+					Reader: &runOnFirstRead{
+						Reader: outreq.Body,
+						fn: func() {
+							go func() {
+								select {
+								case <-clientGone:
+									requestCanceler.CancelRequest(outreq)
+								case <-reqDone:
+								}
+							}()
+						},
 					},
-				},
-				Closer: outreq.Body,
+					Closer: outreq.Body,
+				}
 			}
 		}
+	*/
+
+	if p.Director != nil {
+		p.Director(outreq)
 	}
 
-	p.Director(outreq)
 	outreq.Proto = "HTTP/1.1"
 	outreq.ProtoMajor = 1
 	outreq.ProtoMinor = 1
@@ -158,7 +127,7 @@ func (p *ReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	res, err := transport.RoundTrip(outreq)
+	res, err := p.RoundTrip(outreq)
 	if err != nil {
 		log.Errorf("http: proxy error connecting to %s: %v", req.URL.String(), err.Error())
 		// rw.WriteHeader(http.StatusInternalServerError)
@@ -196,7 +165,7 @@ func (p *ReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	copyHeader(rw.Header(), res.Trailer)
 }
 
-func (p *ReverseProxy) copyResponse(dst io.Writer, src io.Reader) {
+func (p *Server) copyResponse(dst io.Writer, src io.Reader) {
 	if p.FlushInterval != 0 {
 		if wf, ok := dst.(writeFlusher); ok {
 			mlw := &maxLatencyWriter{

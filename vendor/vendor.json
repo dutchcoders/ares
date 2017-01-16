@@ -49,6 +49,12 @@
 			"revisionTime": "2015-03-31T13:04:00Z"
 		},
 		{
+			"checksumSHA1": "XEBl9iQQvfXNlwCSzyAOCqAlYEA=",
+			"path": "github.com/fatih/color",
+			"revision": "42c364ba490082e4815b5222728711b3440603eb",
+			"revisionTime": "2017-01-13T15:16:12Z"
+		},
+		{
 			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
 			"path": "github.com/garyburd/redigo/internal",
 			"revision": "827b38687c49d680c6bd9ac6114111b98cc16cdf",
@@ -77,6 +83,18 @@
 			"path": "github.com/gorilla/securecookie",
 			"revision": "fa5329f913702981df43dcb2a380bac429c810b5",
 			"revisionTime": "2016-10-03T05:16:01Z"
+		},
+		{
+			"checksumSHA1": "eOXF2PEvYLMeD8DSzLZJWbjYzco=",
+			"path": "github.com/kr/pretty",
+			"revision": "cfb55aafdaf3ec08f0db22699ab822c50091b1c4",
+			"revisionTime": "2016-08-23T17:07:15Z"
+		},
+		{
+			"checksumSHA1": "uulQHQ7IsRKqDudBC8Go9J0gtAc=",
+			"path": "github.com/kr/text",
+			"revision": "7cafcd837844e784b526369c9bce262804aebc60",
+			"revisionTime": "2016-05-04T02:26:26Z"
 		},
 		{
 			"checksumSHA1": "R6DzcBLEP0BONPpsyr+11N7xh5w=",
@@ -119,6 +137,12 @@
 			"path": "github.com/miekg/dns",
 			"revision": "ca336a1f95a6b89be9c250df26c7a41742eb4a6f",
 			"revisionTime": "2017-01-04T07:55:54Z"
+		},
+		{
+			"checksumSHA1": "+jYYwEFAR+NW42UwA/AeppFYTbs=",
+			"path": "github.com/minio/cli",
+			"revision": "bf72f027481f5fadaf8800f62c72904e6bd7a200",
+			"revisionTime": "2016-11-25T09:07:42Z"
 		},
 		{
 			"checksumSHA1": "gcLub3oB+u4QrOJZcYmk/y2AP4k=",

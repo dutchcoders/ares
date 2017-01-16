@@ -3,9 +3,15 @@ Phishing toolkit for red teams and pentesters.
 
 Ares allows security testers to create a phishing environment easily. Ares acts as a proxy between the original site and the phished site, and allows modifications and injects. 
 
-## Gophish
+# Getting started
 
-Ares will work seamless with Gophish, where you'll use Ares for the landing page functionality. 
+## Docker
+
+Make sure the config toml is located and valid. 
+
+```
+docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchsec/ares
+```
 
 ## Features
 
@@ -30,7 +36,7 @@ Make sure you have Go 1.7 installed.
 
 ```
 git clone git@github.com:dutchcoders/ares.git
-go run cmd/main.go  -c config.toml
+go run main.go -c config.toml
 ```
 
 ## Injects
@@ -44,17 +50,21 @@ The injects can be inserted in the target site, currently we have the following 
 ## Configuration
 
 ```
-listener = "127.0.0.1:8080"
-tlslistener = "127.0.0.1:8443"
+listener = "0.0.0.0:8080"
+tlslistener = "0.0.0.0:8443"
 
-data = "/data"
-elasticsearch_url = "http://127.0.0.1:9200/"
+# uncomment if you want to store all responses to disk
+#data = "/data"
 
+# uncomment if you want to log all request and responses to elasticsearch
+#elasticsearch_url = "http://127.0.0.1:9200/"
+
+# uncomment if you want to use socks proxy for outgoing traffic
 #socks = "socks5://127.0.0.1:9050"
 
 [[host]]
-host = "google.lvh.me"
-target = "https://accounts.google.com/"
+host = "wikipedia.lvh.me"
+target = "https://en.wikipedia.org"
 
 [[host.action]]
 path = "^.*"
@@ -62,30 +72,35 @@ action = "inject"
 method = ["GET"]
 scripts = ["injects/location.js", "injects/snap.js", "injects/clipboard.js"]
 
+# this action will serve as dump endpoint and will be logged
 [[host.action]]
 path = "^/dump"
 action = "serve"
 body = ""
 
+# this action will replace all regex occurences 
 [[host.action]]
 path = "^/login.html"
 action = "replace"
 method = ["GET"]
-regex = "-ab-axxb-"
-replace = "$1"
+regex = "wikipedia"
+replace = "aidepikiw"
 
+# this action will serve a login template for all get requests to /login.html
 [[host.action]]
 path = "^/login.html"
 action = "file"
 method = ["GET"]
 file = "static/login.html"
 
+# this action will serve a login failed template for post requests to /login.html
 [[host.action]]
 path = "^/login.html"
 action = "file"
 method = ["POST"]
 file = "static/login-failed.html"
 
+# this action will redirect with statuscode 302
 [[host.action]]
 path = "^/short-url"
 statuscode = 302
@@ -96,3 +111,7 @@ location = "/login.html"
 output = "stdout"
 level = "info"
 ```
+
+## Gophish
+
+Ares will work seamless with Gophish, where you'll use Ares for the landing page functionality. 
