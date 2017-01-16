@@ -13,6 +13,9 @@ Make sure the config toml is located and valid.
 docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchsec/ares
 ```
 
+navigate to http://wikipedia.lvh.me:8080/
+
+
 ## Features
 
 * transparant 1 to 1 of original site
@@ -53,14 +56,10 @@ The injects can be inserted in the target site, currently we have the following 
 listener = "0.0.0.0:8080"
 tlslistener = "0.0.0.0:8443"
 
-# uncomment if you want to store all responses to disk
 #data = "/data"
+#elasticsearch_url = "http://127.0.0.1:9200"
 
-# uncomment if you want to log all request and responses to elasticsearch
-#elasticsearch_url = "http://127.0.0.1:9200/"
-
-# uncomment if you want to use socks proxy for outgoing traffic
-#socks = "socks5://127.0.0.1:9050"
+#socks = "socks4://127.0.0.1:9050"
 
 [[host]]
 host = "wikipedia.lvh.me"
@@ -70,39 +69,34 @@ target = "https://en.wikipedia.org"
 path = "^.*"
 action = "inject"
 method = ["GET"]
-scripts = ["injects/location.js", "injects/snap.js", "injects/clipboard.js"]
+scripts = ["injects/webrtc.js"]  #"injects/location.js", "injects/snap.js", "injects/clipboard.js"]
 
-# this action will serve as dump endpoint and will be logged
 [[host.action]]
 path = "^/dump"
 action = "serve"
+content_type = "text/plain"
 body = ""
 
-# this action will replace all regex occurences 
 [[host.action]]
-path = "^/login.html"
+path = "^/.*"
 action = "replace"
-method = ["GET"]
-regex = "wikipedia"
-replace = "aidepikiw"
+regex = "Wikipedia"
+replace = "Blikipedia"
 
-# this action will serve a login template for all get requests to /login.html
 [[host.action]]
-path = "^/login.html"
+path = "/login.html"
 action = "file"
 method = ["GET"]
 file = "static/login.html"
 
-# this action will serve a login failed template for post requests to /login.html
 [[host.action]]
 path = "^/login.html"
 action = "file"
 method = ["POST"]
 file = "static/login-failed.html"
 
-# this action will redirect with statuscode 302
 [[host.action]]
-path = "^/short-url"
+path = "^/short-rul
 statuscode = 302
 action = "redirect"
 location = "/login.html"
