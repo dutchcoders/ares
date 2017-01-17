@@ -25,7 +25,7 @@ import (
 )
 
 func filter(action Action, req *http.Request) bool {
-	if matched, _ := regexp.MatchString(action.Path, req.URL.Path); matched {
+	if matched, _ := regexp.MatchString(action.Path, req.URL.RequestURI()); matched {
 	} else {
 		return false
 	}
