@@ -10,6 +10,7 @@ import (
 	"mime"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -160,6 +161,12 @@ func (a *ActionResponseInject) OnResponse(req *http.Request, resp *http.Response
 	}
 
 	if resp.StatusCode >= 300 {
+		return resp, nil
+	}
+
+	if _, ok := resp.Header["Content-Length"]; !ok {
+	} else if v, err := strconv.Atoi(resp.Header.Get("Content-Length")); err != nil {
+	} else if v == 0 {
 		return resp, nil
 	}
 
