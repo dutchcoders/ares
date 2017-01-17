@@ -40,7 +40,7 @@ var globalFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "tlsport",
 		Usage: "port",
-		Value: "127.0.0.1:8443",
+		Value: "",
 	},
 	cli.StringFlag{
 		Name:  "path",

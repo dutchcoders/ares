@@ -197,8 +197,17 @@ func (t *Server) saveToDisk(req *http.Request, resp *http.Response) (*http.Respo
 }
 
 func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
+	log.Debug("URL: %#v\n", *req.URL)
+	requestURL := *req.URL
+	requestURL.Host = req.Host
+	requestURL.Scheme = "http"
 
+	if t.ListenerTLS == "" {
+	} else if req.TLS != nil {
+		requestURL.Scheme = "https"
+	}
+
+	remoteHost, _, _ := net.SplitHostPort(req.RemoteAddr)
 	doc := &Document{
 		Date:       time.Now(),
 		RemoteAddr: remoteHost,
@@ -444,10 +453,26 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	// rewrite location
 	if val := resp.Header.Get("Location"); val == "" {
 	} else if u, err := url.Parse(val); err != nil {
+		log.Error("Error parsing url: %s", val)
 	} else if targetURL.Host == u.Host {
-		// replace url and scheme
-		u.Scheme = req.URL.Scheme
-		u.Host = req.URL.Host
+		if u.Scheme != "https" {
+		} else if t.ListenerTLS != "" {
+		} else {
+			u.Scheme = "http"
+		}
+
+		u.Host = host.Host
+		if u.Scheme == "http" {
+			_, p, _ := net.SplitHostPort(t.Listener)
+			if p != "80" {
+				u.Host = net.JoinHostPort(u.Host, p)
+			}
+		} else if u.Scheme == "https" {
+			_, p, _ := net.SplitHostPort(t.ListenerTLS)
+			if p != "443" {
+				u.Host = net.JoinHostPort(u.Host, p)
+			}
+		}
 
 		resp.Header.Set("Location", u.String())
 	}
@@ -456,8 +481,10 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	for i, line := range resp.Header["Set-Cookie"] {
 		c := parseCookie(line)
 
-		// do we want to remove secure and http only flags?
 		c.Domain = host.Host
+		if t.ListenerTLS == "" {
+			c.Secure = false
+		}
 
 		resp.Header["Set-Cookie"][i] = c.String()
 	}
