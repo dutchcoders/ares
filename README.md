@@ -10,7 +10,7 @@ Ares allows security testers to create a phishing environment easily. Ares acts 
 Make sure the config toml is located and valid. 
 
 ```
-docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchsec/ares
+docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchcoders/ares
 ```
 
 navigate to http://wikipedia.lvh.me:8080/
