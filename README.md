@@ -96,7 +96,7 @@ method = ["POST"]
 file = "static/login-failed.html"
 
 [[host.action]]
-path = "^/short-rul
+path = "^/short-url"
 statuscode = 302
 action = "redirect"
 location = "/login.html"
