@@ -1,7 +1,6 @@
 # Ares
-Phishing toolkit for red teams and pentesters.
 
-Ares allows security testers to create a phishing environment easily. Ares acts as a proxy between the original site and the phished site, and allows modifications and injects. 
+Phishing toolkit for red teams and pentesters. Ares allows security testers to create a phishing environment easily, based on real sites. Ares acts as a proxy between the phised and original site, and allows (realtime) modifications and injects. 
 
 # Getting started
 
@@ -18,8 +17,8 @@ navigate to http://wikipedia.lvh.me:8080/
 
 ## Features
 
-* transparant 1 to 1 of original site
-* modify specific paths to return static files, rendered as Go templates
+* realtime 1 to 1 of original site
+* modify specific paths to return static (rendered as Go template) files
 * create redirects (short urls)
 * inject scripts into target site
 * support ssl (using lets encrypt)
@@ -30,7 +29,7 @@ navigate to http://wikipedia.lvh.me:8080/
 
 ## Todo
 
-* create frontend for configuration, monitoring and dashboard
+* create small frontend for configuration, monitoring and dashboard
 * send emails from toolkit
 
 ## Installation
@@ -52,59 +51,7 @@ The injects can be inserted in the target site, currently we have the following 
 
 ## Configuration
 
-```
-listener = "0.0.0.0:8080"
-tlslistener = "0.0.0.0:8443"
-
-#data = "/data"
-#elasticsearch_url = "http://127.0.0.1:9200"
-
-#socks = "socks4://127.0.0.1:9050"
-
-[[host]]
-host = "wikipedia.lvh.me"
-target = "https://en.wikipedia.org"
-
-[[host.action]]
-path = "^.*"
-action = "inject"
-method = ["GET"]
-scripts = ["injects/webrtc.js"]  #"injects/location.js", "injects/snap.js", "injects/clipboard.js"]
-
-[[host.action]]
-path = "^/dump"
-action = "serve"
-content_type = "text/plain"
-body = ""
-
-[[host.action]]
-path = "^/.*"
-action = "replace"
-regex = "Wikipedia"
-replace = "Blikipedia"
-
-[[host.action]]
-path = "/login.html"
-action = "file"
-method = ["GET"]
-file = "static/login.html"
-
-[[host.action]]
-path = "^/login.html"
-action = "file"
-method = ["POST"]
-file = "static/login-failed.html"
-
-[[host.action]]
-path = "^/short-rul
-statuscode = 302
-action = "redirect"
-location = "/login.html"
-
-[[logging]]
-output = "stdout"
-level = "info"
-```
+See config.toml.sample for a sample configuration file.
 
 ## Gophish
 
