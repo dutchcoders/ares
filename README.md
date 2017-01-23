@@ -1,4 +1,4 @@
-# Ares
+# Ares [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dutchcoders/ares?utm_source=badge&utm_medium=badge&utm_campaign=&utm_campaign=pr-badge&utm_content=badge) [![Go Report Card](https://goreportcard.com/badge/dutchcoders/ares)](https://goreportcard.com/report/dutchcoders/ares) [![Docker pulls](https://img.shields.io/docker/pulls/dutchsec/ares.svg)](https://hub.docker.com/r/dutchsec/ares/) [![Build Status](https://travis-ci.org/dutchcoders/ares.svg?branch=master)](https://travis-ci.org/dutchcoders/ares)
 
 Phishing toolkit for red teams and pentesters. Ares allows security testers to create a phishing environment easily, based on real sites. Ares acts as a proxy between the phised and original site, and allows (realtime) modifications and injects. 
 
