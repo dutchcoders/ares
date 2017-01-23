@@ -197,7 +197,6 @@ func (t *Server) saveToDisk(req *http.Request, resp *http.Response) (*http.Respo
 }
 
 func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	log.Debug("URL: %#v\n", *req.URL)
 	requestURL := *req.URL
 	requestURL.Host = req.Host
 	requestURL.Scheme = "http"
