@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/dutchsec/ares/cmd"
+	"github.com/dutchcoders/ares/cmd"
 )
 
 func main() {

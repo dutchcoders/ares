@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/dutchsec/ares/server"
+	"github.com/dutchcoders/ares/server"
 	"github.com/fatih/color"
 	"github.com/minio/cli"
 	"github.com/op/go-logging"
