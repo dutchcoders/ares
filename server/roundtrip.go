@@ -315,7 +315,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 		// todo(nl5887): gzip response ?
 		resp.Header.Del("Content-Length")
 
-		resp.Header.Set("Server", "Ares (github.com/dutchcoders/server/)")
+		resp.Header.Set("Server", "Ares (github.com/dutchcoders/ares/)")
 
 		dump, _ = httputil.DumpResponse(resp, false)
 		log.Debugf("Response: %s\n", string(dump))
