@@ -9,7 +9,7 @@ Phishing toolkit for red teams and pentesters. Ares allows security testers to c
 Make sure the config toml is at the right location and valid. 
 
 ```
-docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchsec/ares
+docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchcoders/ares
 ```
 
 Now you can navigate to http://wikipedia.lvh.me:8080/. If you want all results to be written to Elasticsearch, don't forget to setup the Elasticsearch cluster.
