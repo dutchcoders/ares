@@ -12,16 +12,22 @@ Make sure the config toml is at the right location and valid.
 docker run -d -p 8080:8080 --name ares -v $(pwd)/config.toml:/etc/ares.toml dutchcoders/ares
 ```
 
-Now you can navigate to http://wikipedia.lvh.me:8080/. If you want all results to be written to Elasticsearch, don't forget to setup the Elasticsearch cluster.
 
 ### Installation from Source
 
-If you do not have a working Golang (1.7) environment setup please follow Golang Installation Guide.
+If you do not have a working Golang (1.7) environment setup please follow [Golang Installation Guide](https://golang.org/doc/install).
 
 ```
+$ cd `go env GOROOT`
+$ mkdir -p src/github.com/dutchcoders/
+$ cd src/github.com/dutchcoders/
 $ git clone https://github.com/dutchcoders/ares.git
+$ cd ares
+$ cp config.toml.sample config.toml
 $ go run main.go -c config.toml
 ```
+
+Now you can navigate to http://wikipedia.lvh.me:8080/. If you want all results to be written to Elasticsearch, don't forget to setup the Elasticsearch cluster.
 
 ## Features
 
