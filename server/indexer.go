@@ -12,7 +12,12 @@ import (
 func (p *Server) indexer() {
 	log.Info("Indexer started...")
 	defer log.Info("Indexer stopped...")
+
 	u, err := url.Parse(p.ElasticsearchURL)
+	if err != nil {
+	   panic(err)
+	}
+	   
 	es, err := elastic.NewClient(elastic.SetURL(u.Host), elastic.SetSniff(false))
 	if err != nil {
 		panic(err)
@@ -25,7 +30,7 @@ func (p *Server) indexer() {
 		case doc := <-p.index:
 			docId := uuid.NewUUID()
 			bulk = bulk.Add(elastic.NewBulkIndexRequest().
-				Index(strings.Trim(u.Path,"/")).
+				Index(u.Path[1:]).
 				Type("pairs").
 				Id(docId.String()).
 				Doc(doc),
