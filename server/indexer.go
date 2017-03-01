@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 	"net/url"
-	"strings"
 	"github.com/pborman/uuid"
 	"gopkg.in/olivere/elastic.v5"
 )
