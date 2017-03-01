@@ -2,7 +2,7 @@ listener = "0.0.0.0:8080"
 #tlslistener = "0.0.0.0:8443"
 
 #data = "/data"
-#elasticsearch_url = "http://127.0.0.1:9200"
+#elasticsearch_url = "http://127.0.0.1:9200/server"
 
 #socks = "socks4://127.0.0.1:9050"
 

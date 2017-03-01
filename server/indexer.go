@@ -3,7 +3,8 @@ package server
 import (
 	"context"
 	"time"
-
+	"net/url"
+	"strings"
 	"github.com/pborman/uuid"
 	"gopkg.in/olivere/elastic.v5"
 )
@@ -11,21 +12,20 @@ import (
 func (p *Server) indexer() {
 	log.Info("Indexer started...")
 	defer log.Info("Indexer stopped...")
-
-	es, err := elastic.NewClient(elastic.SetURL(p.ElasticsearchURL), elastic.SetSniff(false))
+	u, err := url.Parse(p.ElasticsearchURL)
+	es, err := elastic.NewClient(elastic.SetURL(u.Host), elastic.SetSniff(false))
 	if err != nil {
 		panic(err)
 	}
 
 	bulk := es.Bulk()
-
 	count := 0
 	for {
 		select {
 		case doc := <-p.index:
 			docId := uuid.NewUUID()
 			bulk = bulk.Add(elastic.NewBulkIndexRequest().
-				Index("server").
+				Index(strings.Trim(u.Path,"/")).
 				Type("pairs").
 				Id(docId.String()).
 				Doc(doc),
