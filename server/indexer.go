@@ -14,9 +14,14 @@ func (p *Server) indexer() {
 
 	u, err := url.Parse(p.ElasticsearchURL)
 	if err != nil {
-	   panic(err)
+	   log.Error("Error parsing url: %s", p.ElasticsearchURL)
+		panic(err)
 	}
-	   
+
+	if u.Path == "" || u.Path[1:] == "" {
+            log.Error("Index is not set in elasticsearch_url: ", p.ElasticsearchURL)
+        }
+   
 	es, err := elastic.NewClient(elastic.SetURL(u.Host), elastic.SetSniff(false))
 	if err != nil {
 		panic(err)
