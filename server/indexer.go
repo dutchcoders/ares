@@ -11,7 +11,6 @@ import (
 
 func (p *Server) indexer() (err error) {
 	log.Info("Indexer started...")
-	defer log.Info("Indexer stopped...")
 
 	u, err := url.Parse(p.ElasticsearchURL)
 	if err != nil {
@@ -28,6 +27,7 @@ func (p *Server) indexer() (err error) {
 		return err
 	}
 	go func() {
+		defer log.Info("Indexer stopped...")
 		bulk := es.Bulk()
 		count := 0
 		for {
