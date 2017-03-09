@@ -96,7 +96,11 @@ func (c *Server) Run() {
 	defer log.Info("Ares stopped....")
 
 	if c.ElasticsearchURL != "" {
-		go c.indexer()
+		err := c.indexer()
+                if err != nil {
+			log.Error(err)
+		return 
+		}
 	}
 
 	var router = mux.NewRouter()
