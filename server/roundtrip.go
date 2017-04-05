@@ -446,10 +446,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	}
 
 	// we'll only store bodies for html documents
-	if _, ok := resp.Header["Content-Length"]; !ok {
-	} else if v, err := strconv.Atoi(resp.Header.Get("Content-Length")); err != nil {
-	} else if v == 0 {
-	} else if !IsMediaType(resp.Header.Get("Content-Type"), "text/html") {
+	if !IsMediaType(resp.Header.Get("Content-Type"), "text/html") {
 	} else if d, err := goquery.NewDocumentFromReader(resp.Body); err == io.EOF {
 		return resp, nil
 	} else if err != nil {
