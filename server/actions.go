@@ -25,6 +25,12 @@ type ActionRequestRedirect struct {
 func (a *ActionRequestRedirect) OnRequest(req *http.Request) (*http.Request, *http.Response, error) {
 	r, w := io.Pipe()
 
+	statusCode := http.StatusTemporaryRedirect
+
+	if a.StatusCode != 0 {
+		statusCode = a.StatusCode
+	}
+
 	resp := &http.Response{
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
@@ -32,10 +38,9 @@ func (a *ActionRequestRedirect) OnRequest(req *http.Request) (*http.Request, *ht
 		Header:     make(http.Header),
 		Body:       r,
 		Request:    req,
-		StatusCode: a.StatusCode,
+		StatusCode: statusCode,
 	}
 
-	resp.Header.Add("Content-Type", "text/html")
 	resp.Header.Add("Location", a.Location)
 
 	go func() {
@@ -52,6 +57,12 @@ type ActionRequestServe struct {
 func (a *ActionRequestServe) OnRequest(req *http.Request) (*http.Request, *http.Response, error) {
 	r, w := io.Pipe()
 
+	statusCode := http.StatusOK
+
+	if a.StatusCode != 0 {
+		statusCode = a.StatusCode
+	}
+
 	resp := &http.Response{
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
@@ -59,10 +70,15 @@ func (a *ActionRequestServe) OnRequest(req *http.Request) (*http.Request, *http.
 		Header:     make(http.Header),
 		Body:       r,
 		Request:    req,
-		StatusCode: 200,
+		StatusCode: statusCode,
 	}
 
-	resp.Header.Add("Content-Type", a.ContentType)
+	contentType := "text/html"
+	if a.ContentType != "" {
+		contentType = a.ContentType
+	}
+
+	resp.Header.Add("Content-Type", contentType)
 
 	go func() {
 		defer w.Close()
@@ -82,6 +98,12 @@ type ActionRequestFile struct {
 func (a *ActionRequestFile) OnRequest(req *http.Request) (*http.Request, *http.Response, error) {
 	r, w := io.Pipe()
 
+	statusCode := http.StatusOK
+
+	if a.StatusCode != 0 {
+		statusCode = a.StatusCode
+	}
+
 	resp := &http.Response{
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
@@ -89,10 +111,16 @@ func (a *ActionRequestFile) OnRequest(req *http.Request) (*http.Request, *http.R
 		Header:     make(http.Header),
 		Body:       r,
 		Request:    req,
-		StatusCode: a.StatusCode,
+		StatusCode: statusCode,
 	}
 
-	resp.Header.Add("Content-Type", a.ContentType)
+	contentType := "text/html"
+	if a.ContentType != "" {
+		contentType = a.ContentType
+	}
+
+	resp.Header.Add("Content-Type", contentType)
+
 	go func() {
 		defer w.Close()
 
