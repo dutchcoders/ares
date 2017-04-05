@@ -455,7 +455,104 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	} else {
 		doc.Response.Body = d.Text()
 
+		d.Find("base").Each(func(i int, s *goquery.Selection) {
+			if val, ok := s.Attr("href"); ok {
+				hrefURL, err := url.Parse(val)
+				if err != nil {
+					log.Debug("Error parsing url %s: %s", val, err.Error())
+					return
+				}
+
+				if hrefURL.Host == targetURL.Host {
+					hrefURL.Host = host.Host
+				}
+
+				s.SetAttr("href", hrefURL.String())
+			}
+		})
+
+		d.Find("link").Each(func(i int, s *goquery.Selection) {
+			if val, ok := s.Attr("href"); ok {
+				hrefURL, err := url.Parse(val)
+				if err != nil {
+					log.Debug("Error parsing url %s: %s", val, err.Error())
+					return
+				}
+
+				if hrefURL.Host == targetURL.Host {
+					hrefURL.Host = host.Host
+				}
+
+				s.SetAttr("href", hrefURL.String())
+			}
+		})
+
+		d.Find("form").Each(func(i int, s *goquery.Selection) {
+			if val, ok := s.Attr("src"); ok {
+				hrefURL, err := url.Parse(val)
+				if err != nil {
+					log.Debug("Error parsing url %s: %s", val, err.Error())
+					return
+				}
+
+				if hrefURL.Host == targetURL.Host {
+					hrefURL.Host = host.Host
+				}
+
+				s.SetAttr("src", hrefURL.String())
+			}
+		})
+
+		d.Find("img").Each(func(i int, s *goquery.Selection) {
+			if val, ok := s.Attr("src"); ok {
+				hrefURL, err := url.Parse(val)
+				if err != nil {
+					log.Debug("Error parsing url %s: %s", val, err.Error())
+					return
+				}
+
+				if hrefURL.Host == targetURL.Host {
+					hrefURL.Host = host.Host
+				}
+
+				s.SetAttr("src", hrefURL.String())
+			}
+		})
+
+		d.Find("script").Each(func(i int, s *goquery.Selection) {
+			if val, ok := s.Attr("src"); ok {
+				hrefURL, err := url.Parse(val)
+				if err != nil {
+					log.Debug("Error parsing url %s: %s", val, err.Error())
+					return
+				}
+
+				if hrefURL.Host == targetURL.Host {
+					hrefURL.Host = host.Host
+				}
+
+				s.SetAttr("src", hrefURL.String())
+			}
+		})
+
+		d.Find("a").Each(func(i int, s *goquery.Selection) {
+			if val, ok := s.Attr("href"); ok {
+				hrefURL, err := url.Parse(val)
+				if err != nil {
+					log.Debug("Error parsing url %s: %s", val, err.Error())
+					return
+				}
+
+				if hrefURL.Host == targetURL.Host {
+					hrefURL.Host = host.Host
+				}
+
+				s.SetAttr("href", hrefURL.String())
+			}
+		})
+
 		html, _ := d.Html()
+
 		resp.Body = ioutil.NopCloser(strings.NewReader(html))
 	}
 
