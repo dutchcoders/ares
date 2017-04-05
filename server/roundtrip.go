@@ -234,11 +234,21 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 		return HostNotConfigured(req)
 	}
 
-	var targetURL *url.URL
+	var targetURL url.URL = *req.URL
+
+	targetURL.Scheme = "http"
+	targetURL.Host = host.Target
+
+	if req.TLS != nil {
+		targetURL.Scheme = "https"
+	}
+
 	if u, err := url.Parse(host.Target); err != nil {
 		return nil, err
+	} else if u.Host == "" {
+		// failed to parse
 	} else {
-		targetURL = u
+		targetURL = *u
 	}
 
 	req.Host = targetURL.Host
@@ -255,8 +265,8 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	} else if u, err := url.Parse(val); err != nil {
 	} else if targetURL.Host == u.Host {
 		// replace url and scheme
-		u.Scheme = targetURL.Scheme
-		u.Host = targetURL.Host
+		u.Scheme = req.URL.Scheme
+		u.Host = req.URL.Host
 
 		req.Header.Set("Referer", u.String())
 	}
