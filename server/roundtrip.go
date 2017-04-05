@@ -308,9 +308,11 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 
 		if a, ok := a.(ActionRequester); !ok {
 		} else if req, resp, err = a.OnRequest(req); err != nil {
-			log.Errorf("Error executing action: %s: %s", err.Error())
+			log.Errorf("Error executing action onrequest: %s: %s", err.Error())
 		} else if resp == nil {
 		} else {
+			log.Debugf("Executed action onrequest: %s", action.Action)
+			break
 			// or do we want to have the injector and such run?
 			return resp, err
 		}
@@ -436,9 +438,10 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 
 		if a, ok := a.(ActionResponserer); !ok {
 		} else if resp, err = a.OnResponse(req, resp); err != nil {
-			log.Errorf("Error executing action: %s: %s", err.Error())
+			log.Errorf("Error executing action onresponse: %s: %s", err.Error())
+		} else if resp == nil {
 		} else {
-			log.Debugf("Executed action: %s", action.Action)
+			log.Debugf("Executed action onresponse: %s", action.Action)
 		}
 	}
 
