@@ -21,7 +21,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"path"
-	"strconv"
 )
 
 func filter(action Action, req *http.Request) bool {
