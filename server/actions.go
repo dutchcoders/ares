@@ -1,6 +1,8 @@
 package server
 
 import (
+	"errors"
+
 	"github.com/PuerkitoBio/goquery"
 
 	"html/template"
@@ -28,6 +30,10 @@ func (a *ActionRequestRedirect) OnRequest(req *http.Request) (*http.Request, *ht
 
 	if a.StatusCode != 0 {
 		statusCode = a.StatusCode
+	}
+
+	if a.Location == "" {
+		return req, nil, errors.New("Location for action not set.")
 	}
 
 	resp := &http.Response{
