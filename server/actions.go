@@ -3,7 +3,6 @@ package server
 import (
 	"github.com/PuerkitoBio/goquery"
 
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -82,8 +81,6 @@ func (a *ActionRequestServe) OnRequest(req *http.Request) (*http.Request, *http.
 
 	go func() {
 		defer w.Close()
-
-		fmt.Println(a.Body)
 
 		w.Write([]byte(a.Body))
 	}()
