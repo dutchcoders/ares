@@ -1,5 +1,7 @@
 # Ares [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dutchcoders/ares?utm_source=badge&utm_medium=badge&utm_campaign=&utm_campaign=pr-badge&utm_content=badge) [![Go Report Card](https://goreportcard.com/badge/dutchcoders/ares)](https://goreportcard.com/report/dutchcoders/ares) [![Docker pulls](https://img.shields.io/docker/pulls/dutchsec/ares.svg)](https://hub.docker.com/r/dutchsec/ares/) [![Build Status](https://travis-ci.org/dutchcoders/ares.svg?branch=master)](https://travis-ci.org/dutchcoders/ares)
 
+[![Join the chat at https://gitter.im/dutchcoders/ares](https://badges.gitter.im/dutchcoders/ares.svg)](https://gitter.im/dutchcoders/ares?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Phishing toolkit for red teams and pentesters. Ares allows security testers to create a landing page easily, embedded within the original site. Ares acts as a proxy between the phised and original site, and allows (realtime) modifications and injects. All references to the original site are being rewritten to the new site. Users will use the site like they'll normally do, but every step will be recorded of influenced. Ares will work perfect with dns poisoning as well.
 
 ## Getting started
