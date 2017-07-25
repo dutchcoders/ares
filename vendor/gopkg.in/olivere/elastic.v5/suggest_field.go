@@ -6,11 +6,12 @@ package elastic
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 // SuggestField can be used by the caller to specify a suggest field
 // at index time. For a detailed example, see e.g.
-// http://www.elasticsearch.org/blog/you-complete-me/.
+// https://www.elastic.co/blog/you-complete-me.
 type SuggestField struct {
 	inputs         []string
 	weight         int
@@ -68,13 +69,19 @@ func (f *SuggestField) MarshalJSON() ([]byte, error) {
 		}
 		source["context"] = src
 	default:
-		var ctxq []interface{}
+		ctxq := make(map[string]interface{})
 		for _, query := range f.contextQueries {
 			src, err := query.Source()
 			if err != nil {
 				return nil, err
 			}
-			ctxq = append(ctxq, src)
+			m, ok := src.(map[string]interface{})
+			if !ok {
+				return nil, errors.New("SuggesterContextQuery must be of type map[string]interface{}")
+			}
+			for k, v := range m {
+				ctxq[k] = v
+			}
 		}
 		source["context"] = ctxq
 	}

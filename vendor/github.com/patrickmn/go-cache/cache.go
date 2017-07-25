@@ -81,12 +81,6 @@ func (c *cache) set(k string, x interface{}, d time.Duration) {
 	}
 }
 
-// Add an item to the cache, replacing any existing item, using the default
-// expiration.
-func (c *cache) SetDefault(k string, x interface{}) {
-	c.Set(k, x, DefaultExpiration)
-}
-
 // Add an item to the cache only if an item doesn't already exist for the given
 // key, or if the existing item has expired. Returns an error otherwise.
 func (c *cache) Add(k string, x interface{}, d time.Duration) error {
@@ -1004,26 +998,19 @@ func (c *cache) LoadFile(fname string) error {
 	return fp.Close()
 }
 
-// Copies all unexpired items in the cache into a new map and returns it.
+// Returns the items in the cache. This may include items that have expired,
+// but have not yet been cleaned up. If this is significant, the Expiration
+// fields of the items should be checked. Note that explicit synchronization
+// is needed to use a cache and its corresponding Items() return value at
+// the same time, as the map is shared.
 func (c *cache) Items() map[string]Item {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	m := make(map[string]Item, len(c.items))
-	now := time.Now().UnixNano()
-	for k, v := range c.items {
-		// "Inlining" of Expired
-		if v.Expiration > 0 {
-			if now > v.Expiration {
-				continue
-			}
-		}
-		m[k] = v
-	}
-	return m
+	return c.items
 }
 
 // Returns the number of items in the cache. This may include items that have
-// expired, but have not yet been cleaned up.
+// expired, but have not yet been cleaned up. Equivalent to len(c.Items()).
 func (c *cache) ItemCount() int {
 	c.mu.RLock()
 	n := len(c.items)

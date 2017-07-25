@@ -1,0 +1,201 @@
+{
+    "memo": "f6c0161105e583e666179dbf2f7ed77448142f2505764770326c8a7bf8027b20",
+    "projects": [
+        {
+            "name": "github.com/BurntSushi/toml",
+            "version": "v0.3.0",
+            "revision": "b26d9c308763d68093482582cea63d69be07a0f0",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/PuerkitoBio/goquery",
+            "version": "v1.1.0",
+            "revision": "e1271ee34c6a305e38566ecd27ae374944907ee9",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/andybalholm/cascadia",
+            "branch": "master",
+            "revision": "349dd0209470eabd9514242c688c403c0926d266",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/fatih/color",
+            "version": "v1.4.1",
+            "revision": "9131ab34cf20d2f6d83fdc67168a5430d1c7dc23",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gorilla/context",
+            "version": "v1.1",
+            "revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gorilla/mux",
+            "version": "v1.3.0",
+            "revision": "392c28fe23e1c45ddba891b0320b3b5df220beea",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/labstack/gommon",
+            "version": "v0.2.0",
+            "revision": "9cedb429ffbe71a32a3ae7c65fd109cb7ae07804",
+            "packages": [
+                "color",
+                "log"
+            ]
+        },
+        {
+            "name": "github.com/mattn/go-colorable",
+            "version": "v0.0.7",
+            "revision": "d228849504861217f796da67fae4f6e347643f15",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/mattn/go-isatty",
+            "version": "v0.0.2",
+            "revision": "fc9e8d8ef48496124e79ae0df75490096eccf6fe",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/minio/cli",
+            "version": "v1.3.0",
+            "revision": "8683fa7fef37cc8cb092f47bdb6b403e0049f9ee",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/mohamedattahri/mail",
+            "branch": "master",
+            "revision": "52bc9c59063f12d07450d2ce7853cac3d3892a74",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/nlopes/slack",
+            "version": "v0.0.1",
+            "revision": "3e8aa5655be613e1d4ce0b740993bb734a2b0f7b",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/op/go-logging",
+            "version": "v1",
+            "revision": "b2cb9fa56473e98db8caba80237377e83fe44db5",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/patrickmn/go-cache",
+            "version": "v2.0.0",
+            "revision": "1881a9bccb818787f68c52bfba648c6cf34c34fa",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/pborman/uuid",
+            "version": "v1.0",
+            "revision": "a97ce2ca70fa5a848076093f05e639a89ca34d06",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/valyala/bytebufferpool",
+            "branch": "master",
+            "revision": "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/valyala/fasttemplate",
+            "branch": "master",
+            "revision": "dcecefd839c4193db0d35b88ec65b4c12d360ab0",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "golang.org/x/crypto",
+            "branch": "master",
+            "revision": "c2303dcbe84172e0c0da4c9f083eeca54c06f298",
+            "packages": [
+                "acme",
+                "acme/autocert"
+            ]
+        },
+        {
+            "name": "golang.org/x/net",
+            "branch": "master",
+            "revision": "ffcf1bedda3b04ebb15a168a59800a73d6dc0f4d",
+            "packages": [
+                "context",
+                "context/ctxhttp",
+                "html",
+                "html/atom",
+                "proxy",
+                "websocket"
+            ]
+        },
+        {
+            "name": "golang.org/x/sys",
+            "branch": "master",
+            "revision": "39e3dc274464e7d2f663aa606a830611bae5f1db",
+            "packages": [
+                "unix"
+            ]
+        },
+        {
+            "name": "gopkg.in/alexcesaro/quotedprintable.v3",
+            "branch": "v3",
+            "revision": "2caba252f4dc53eaf6b553000885530023f54623",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "gopkg.in/mgo.v2",
+            "branch": "v2",
+            "revision": "3f83fa5005286a7fe593b055f0d7771a7dce4655",
+            "packages": [
+                ".",
+                "bson",
+                "internal/json",
+                "internal/sasl",
+                "internal/scram"
+            ]
+        },
+        {
+            "name": "gopkg.in/olivere/elastic.v5",
+            "version": "v5.0.31",
+            "revision": "cf4e58efdcee2e8e7c18dad44d51ed166fb256c2",
+            "packages": [
+                ".",
+                "uritemplates"
+            ]
+        }
+    ]
+}

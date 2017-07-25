@@ -1,10 +1,11 @@
 package server
 
 import (
-	"github.com/BurntSushi/toml"
-	"github.com/op/go-logging"
 	"io"
 	"os"
+
+	"github.com/BurntSushi/toml"
+	"github.com/op/go-logging"
 )
 
 type config struct {
@@ -12,6 +13,8 @@ type config struct {
 
 	Socks            string `toml:"socks"`
 	ElasticsearchURL string `toml:"elasticsearch_url"`
+
+	MongoURL string `toml:"mongodb_uri"`
 
 	Listener    string `toml:"listener"`
 	ListenerTLS string `toml:"tlslistener"`

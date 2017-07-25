@@ -108,14 +108,18 @@ You typically create one client for your app. Here's a complete example of
 creating a client, creating an index, adding a document, executing a search etc.
 
 ```go
+// Create a context
+ctx := context.Background()
+
 // Create a client
 client, err := elastic.NewClient()
 if err != nil {
     // Handle error
+    panic(err)
 }
 
 // Create an index
-_, err = client.CreateIndex("twitter").Do()
+_, err = client.CreateIndex("twitter").Do(ctx)
 if err != nil {
     // Handle error
     panic(err)
@@ -128,8 +132,8 @@ _, err = client.Index().
     Type("tweet").
     Id("1").
     BodyJson(tweet).
-    Refresh(true).
-    Do()
+    Refresh("true").
+    Do(ctx)
 if err != nil {
     // Handle error
     panic(err)
@@ -143,7 +147,7 @@ searchResult, err := client.Search().
     Sort("user", true). // sort by "user" field, ascending
     From(0).Size(10).   // take documents 0-9
     Pretty(true).       // pretty print request and response JSON
-    Do()                // execute
+    Do(ctx)             // execute
 if err != nil {
     // Handle error
     panic(err)
@@ -190,7 +194,7 @@ if searchResult.Hits.TotalHits > 0 {
 }
 
 // Delete the index again
-_, err = client.DeleteIndex("twitter").Do()
+_, err = client.DeleteIndex("twitter").Do(ctx)
 if err != nil {
     // Handle error
     panic(err)
@@ -278,7 +282,7 @@ See the [wiki](https://github.com/olivere/elastic/wiki) for more details.
   - [x] Max Bucket
   - [x] Min Bucket
   - [x] Sum Bucket
-  - [ ] Stats Bucket
+  - [x] Stats Bucket
   - [ ] Extended Stats Bucket
   - [ ] Percentiles Bucket
   - [x] Moving Average
@@ -306,7 +310,7 @@ See the [wiki](https://github.com/olivere/elastic/wiki) for more details.
 - [x] Index Aliases
 - [x] Update Indices Settings
 - [x] Get Settings
-- [ ] Analyze
+- [x] Analyze
 - [x] Index Templates
 - [ ] Shadow Replica Indices
 - [x] Indices Stats
@@ -389,7 +393,7 @@ The cat APIs are not implemented as of now. We think they are better suited for 
   - [x] Nested Query
   - [x] Has Child Query
   - [x] Has Parent Query
-  - [ ] Parent Id Query
+  - [x] Parent Id Query
 - Geo queries
   - [ ] GeoShape Query
   - [x] Geo Bounding Box Query

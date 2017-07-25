@@ -19,7 +19,7 @@ Now you can navigate to http://wikipedia.lvh.me:8080/. If you want all results t
 If you do not have a working Golang (1.7) environment setup please follow Golang Installation Guide.
 
 ```
-$ git clone https://github.com/dutchcoders/ares.git
+$ go get github.com/dutchcoders/ares
 $ go run main.go -c config.toml
 ```
 

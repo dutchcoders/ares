@@ -2,15 +2,27 @@ package server
 
 import (
 	"context"
+	"net/url"
 	"time"
 
+	_ "github.com/labstack/gommon/log"
 	"github.com/pborman/uuid"
 	"gopkg.in/olivere/elastic.v5"
 )
 
+type Indexabler interface {
+	ID() string
+	Type() string
+}
+
 func (p *Server) indexer() {
 	log.Info("Indexer started...")
 	defer log.Info("Indexer stopped...")
+
+	u, err := url.Parse(p.ElasticsearchURL)
+	if err != nil {
+		panic(err)
+	}
 
 	es, err := elastic.NewClient(elastic.SetURL(p.ElasticsearchURL), elastic.SetSniff(false))
 	if err != nil {
@@ -24,9 +36,10 @@ func (p *Server) indexer() {
 		select {
 		case doc := <-p.index:
 			docId := uuid.NewUUID()
+
 			bulk = bulk.Add(elastic.NewBulkIndexRequest().
-				Index("server").
-				Type("pairs").
+				Index(u.Path[1:]).
+				Type("event").
 				Id(docId.String()).
 				Doc(doc),
 			)
