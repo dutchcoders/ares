@@ -143,6 +143,21 @@ func (a Aggregations) ExtendedStats(name string) (*AggregationExtendedStatsMetri
 	return nil, false
 }
 
+// MatrixStats returns matrix stats aggregation results.
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.2/search-aggregations-matrix-stats-aggregation.html
+func (a Aggregations) MatrixStats(name string) (*AggregationMatrixStats, bool) {
+	if raw, found := a[name]; found {
+		agg := new(AggregationMatrixStats)
+		if raw == nil {
+			return agg, true
+		}
+		if err := json.Unmarshal(*raw, agg); err == nil {
+			return agg, true
+		}
+	}
+	return nil, false
+}
+
 // Percentiles returns percentiles results.
 // See: https://www.elastic.co/guide/en/elasticsearch/reference/5.2/search-aggregations-metrics-percentile-aggregation.html
 func (a Aggregations) Percentiles(name string) (*AggregationPercentilesMetric, bool) {
@@ -518,6 +533,21 @@ func (a Aggregations) StatsBucket(name string) (*AggregationPipelineStatsMetric,
 	return nil, false
 }
 
+// PercentilesBucket returns stats bucket pipeline aggregation results.
+// See https://www.elastic.co/guide/en/elasticsearch/reference/5.2/search-aggregations-pipeline-percentiles-bucket-aggregation.html
+func (a Aggregations) PercentilesBucket(name string) (*AggregationPipelinePercentilesMetric, bool) {
+	if raw, found := a[name]; found {
+		agg := new(AggregationPipelinePercentilesMetric)
+		if raw == nil {
+			return agg, true
+		}
+		if err := json.Unmarshal(*raw, agg); err == nil {
+			return agg, true
+		}
+	}
+	return nil, false
+}
+
 // MaxBucket returns maximum bucket pipeline aggregation results.
 // See https://www.elastic.co/guide/en/elasticsearch/reference/5.2/search-aggregations-pipeline-max-bucket-aggregation.html
 func (a Aggregations) MaxBucket(name string) (*AggregationPipelineBucketMetricValue, bool) {
@@ -738,6 +768,46 @@ func (a *AggregationExtendedStatsMetric) UnmarshalJSON(data []byte) error {
 	}
 	if v, ok := aggs["std_deviation"]; ok && v != nil {
 		json.Unmarshal(*v, &a.StdDeviation)
+	}
+	if v, ok := aggs["meta"]; ok && v != nil {
+		json.Unmarshal(*v, &a.Meta)
+	}
+	a.Aggregations = aggs
+	return nil
+}
+
+// -- Matrix Stats --
+
+// AggregationMatrixStats is returned by a MatrixStats aggregation.
+type AggregationMatrixStats struct {
+	Aggregations
+
+	Fields []*AggregationMatrixStatsField // `json:"field,omitempty"`
+	Meta   map[string]interface{}         // `json:"meta,omitempty"`
+}
+
+// AggregationMatrixStatsField represents running stats of a single field
+// returned from MatrixStats aggregation.
+type AggregationMatrixStatsField struct {
+	Name        string             `json:"name"`
+	Count       int64              `json:"count"`
+	Mean        float64            `json:"mean,omitempty"`
+	Variance    float64            `json:"variance,omitempty"`
+	Skewness    float64            `json:"skewness,omitempty"`
+	Kurtosis    float64            `json:"kurtosis,omitempty"`
+	Covariance  map[string]float64 `json:"covariance,omitempty"`
+	Correlation map[string]float64 `json:"correlation,omitempty"`
+}
+
+// UnmarshalJSON decodes JSON data and initializes an AggregationMatrixStats structure.
+func (a *AggregationMatrixStats) UnmarshalJSON(data []byte) error {
+	var aggs map[string]*json.RawMessage
+	if err := json.Unmarshal(data, &aggs); err != nil {
+		return err
+	}
+	if v, ok := aggs["fields"]; ok && v != nil {
+		// RunningStats for every field
+		json.Unmarshal(*v, &a.Fields)
 	}
 	if v, ok := aggs["meta"]; ok && v != nil {
 		json.Unmarshal(*v, &a.Meta)
@@ -1344,6 +1414,33 @@ func (a *AggregationPipelineStatsMetric) UnmarshalJSON(data []byte) error {
 	}
 	if v, ok := aggs["sum_as_string"]; ok && v != nil {
 		json.Unmarshal(*v, &a.SumAsString)
+	}
+	if v, ok := aggs["meta"]; ok && v != nil {
+		json.Unmarshal(*v, &a.Meta)
+	}
+	a.Aggregations = aggs
+	return nil
+}
+
+// -- Pipeline percentiles
+
+// AggregationPipelinePercentilesMetric is the value returned by a pipeline
+// percentiles Metric aggregation
+type AggregationPipelinePercentilesMetric struct {
+	Aggregations
+
+	Values map[string]float64     // `json:"values"`
+	Meta   map[string]interface{} // `json:"meta,omitempty"`
+}
+
+// UnmarshalJSON decodes JSON data and initializes an AggregationPipelinePercentilesMetric structure.
+func (a *AggregationPipelinePercentilesMetric) UnmarshalJSON(data []byte) error {
+	var aggs map[string]*json.RawMessage
+	if err := json.Unmarshal(data, &aggs); err != nil {
+		return err
+	}
+	if v, ok := aggs["values"]; ok && v != nil {
+		json.Unmarshal(*v, &a.Values)
 	}
 	if v, ok := aggs["meta"]; ok && v != nil {
 		json.Unmarshal(*v, &a.Meta)
