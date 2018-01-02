@@ -16,6 +16,7 @@ type config struct {
 
 	MongoURL string `toml:"mongodb_uri"`
 
+	CacheDir    string
 	Listener    string `toml:"listener"`
 	ListenerTLS string `toml:"tlslistener"`
 
@@ -90,6 +91,12 @@ func Config(val string) func(*Server) {
 		}
 
 		logging.SetBackend(logBackends...)
+	}
+}
+
+func Cache(s string) func(*Server) {
+	return func(srvr *Server) {
+		srvr.CacheDir = s
 	}
 }
 

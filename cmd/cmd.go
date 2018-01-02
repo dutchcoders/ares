@@ -43,6 +43,12 @@ var globalFlags = []cli.Flag{
 		Value: "",
 	},
 	cli.StringFlag{
+		Name:   "cache",
+		Usage:  "path to cache ",
+		Value:  "./cache/",
+		EnvVar: "ARES_CACHE",
+	},
+	cli.StringFlag{
 		Name:  "path",
 		Usage: "path to static files",
 		Value: "",
@@ -82,11 +88,18 @@ func New() *Cmd {
 	}
 
 	app.Action = func(c *cli.Context) {
-		srvr := server.New(
+		options := []func(*server.Server){
 			server.Address(c.String("port")),
-			server.TLSAddress(c.String("tlsport")),
-
+			server.Cache(c.String("cache")),
 			server.Config(c.String("config")),
+		}
+
+		if s := c.String("tlsport"); s != "" {
+			options = append(options, server.TLSAddress(s))
+		}
+
+		srvr := server.New(
+			options...,
 		)
 
 		srvr.Run()

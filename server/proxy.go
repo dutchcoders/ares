@@ -126,60 +126,22 @@ func (c *Server) Run() {
 
 	if c.ListenerTLS == "" {
 	} else {
-		cacheDir := "./cache/"
-
-		/*
-			if c.LetsEncryptCache != "" {
-				cacheDir = c.LetsEncryptCache
-			}
-		*/
+		log.Infof("Using cachedir: %s", c.CacheDir)
 
 		m := autocert.Manager{
 			Prompt: autocert.AcceptTOS,
-			Cache:  autocert.DirCache(cacheDir),
+			Cache:  autocert.DirCache(c.CacheDir),
 			HostPolicy: func(_ context.Context, host string) error {
-				/*
-					if !strings.HasSuffix(host, "tor.onl") {
-						return errors.New("acme/autocert: host not configured")
-					}
-					return nil
-				*/
 				return nil
 			},
 		}
 
 		go func() {
-			/*
-				certificate, err := tls.LoadX509KeyPair(c.ServerCertificateFile, c.ServerKeyFile)
-				if err != nil {
-					log.Errorf("Error loading certificate: %s", err.Error())
-					return
-				}
-
-				certFn := func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-					if len(certificate.Certificate) == 0 {
-						return nil, fmt.Errorf("No certificate configured.")
-					} else if x509Cert, err := x509.ParseCertificate(certificate.Certificate[0]); err != nil {
-						return nil, err
-					} else if err := x509Cert.VerifyHostname(clientHello.ServerName); err != nil {
-						return nil, err
-					}
-
-					return &certificate, nil
-				}
-
-			*/
 			s := &http.Server{
-				Addr:    ":https",
+				Addr:    c.ListenerTLS,
 				Handler: handler,
 				TLSConfig: &tls.Config{
 					GetCertificate: func(clientHello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-						/*
-							if c, err := certFn(clientHello); err == nil {
-								return c, err
-							}
-						*/
-
 						return m.GetCertificate(clientHello)
 					},
 				},
