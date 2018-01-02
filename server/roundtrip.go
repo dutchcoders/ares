@@ -542,6 +542,54 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	} else {
 		// what to do with this?
 		// anonymous?
+		req.ParseForm()
+
+		remoteAddr := req.RemoteAddr
+		if h, _, err := net.SplitHostPort(remoteAddr); err == nil {
+			remoteAddr = h
+		}
+
+		type Cookie struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		}
+
+		cookies := []Cookie{}
+
+		for _, c := range req.Cookies() {
+			cookies = append(cookies, Cookie{
+				Name:  c.Name,
+				Value: c.Value,
+			})
+		}
+
+		t.index <- struct {
+			URL  string `json:"url"`
+			Host string `json:"host"`
+			Path string `json:"path"`
+
+			Date       time.Time           `json:"date"`
+			Method     string              `json:"method,omitempty"`
+			UserAgent  string              `json:"user_agent,omitempty"`
+			Referer    string              `json:"referer,omitempty"`
+			RemoteAddr string              `json:"remote_addr,omitempty"`
+			Headers    map[string][]string `json:"headers,omitempty"`
+			Cookies    []Cookie            `json:"cookies,omitempty"`
+			Data       interface{}         `json:"data"`
+		}{
+			Date:       time.Now(),
+			Method:     req.Method,
+			URL:        req.URL.String(),
+			Path:       req.URL.Path,
+			Host:       req.URL.Host,
+			RemoteAddr: remoteAddr,
+			Headers:    req.Header,
+			UserAgent:  req.UserAgent(),
+			Referer:    req.Header.Get("referer"),
+			Cookies:    cookies,
+			Data:       req.Form,
+		}
+
 	}
 
 	defer func() {
