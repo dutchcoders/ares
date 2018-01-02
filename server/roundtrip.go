@@ -542,8 +542,6 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	} else {
 		// what to do with this?
 		// anonymous?
-		req.ParseForm()
-
 		remoteAddr := req.RemoteAddr
 		if h, _, err := net.SplitHostPort(remoteAddr); err == nil {
 			remoteAddr = h
@@ -563,6 +561,11 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 			})
 		}
 
+		statusCode := 0
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+
 		t.index <- struct {
 			URL  string `json:"url"`
 			Host string `json:"host"`
@@ -572,6 +575,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 			Method     string              `json:"method,omitempty"`
 			UserAgent  string              `json:"user_agent,omitempty"`
 			Referer    string              `json:"referer,omitempty"`
+			Statuscode int                 `json:"statuscode`
 			RemoteAddr string              `json:"remote_addr,omitempty"`
 			Headers    map[string][]string `json:"headers,omitempty"`
 			Cookies    []Cookie            `json:"cookies,omitempty"`
@@ -580,6 +584,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 			Date:       time.Now(),
 			Method:     req.Method,
 			URL:        req.URL.String(),
+			Statuscode: statusCode,
 			Path:       req.URL.Path,
 			Host:       req.URL.Host,
 			RemoteAddr: remoteAddr,
