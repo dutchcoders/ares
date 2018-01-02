@@ -1,26 +1,20 @@
 package slack
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"time"
 )
 
-// StartRTM calls the "rtm.start" endpoint and returns the provided URL and the full Info block.
+// StartRTM calls the "rtm.start" endpoint and returns the provided URL and the full Info
+// block.
 //
-// To have a fully managed Websocket connection, use `NewRTM`, and call `ManageConnection()` on it.
+// To have a fully managed Websocket connection, use `NewRTM`, and call `ManageConnection()`
+// on it.
 func (api *Client) StartRTM() (info *Info, websocketURL string, err error) {
-	return api.StartRTMContext(context.Background())
-}
-
-// StartRTMContext calls the "rtm.start" endpoint and returns the provided URL and the full Info block with a custom context.
-//
-// To have a fully managed Websocket connection, use `NewRTM`, and call `ManageConnection()` on it.
-func (api *Client) StartRTMContext(ctx context.Context) (info *Info, websocketURL string, err error) {
 	response := &infoResponseFull{}
-	err = post(ctx, "rtm.start", url.Values{"token": {api.config.token}}, response, api.debug)
+	err = post("rtm.start", url.Values{"token": {api.config.token}}, response, api.debug)
 	if err != nil {
 		return nil, "", fmt.Errorf("post: %s", err)
 	}
@@ -40,19 +34,14 @@ func (api *Client) StartRTMContext(ctx context.Context) (info *Info, websocketUR
 	return &response.Info, websocketURL, nil
 }
 
-// ConnectRTM calls the "rtm.connect" endpoint and returns the provided URL and the compact Info block.
+// ConnectRTM calls the "rtm.connect" endpoint and returns the provided URL and the compact Info
+// block.
 //
-// To have a fully managed Websocket connection, use `NewRTM`, and call `ManageConnection()` on it.
+// To have a fully managed Websocket connection, use `NewRTM`, and call `ManageConnection()`
+// on it.
 func (api *Client) ConnectRTM() (info *Info, websocketURL string, err error) {
-	return api.ConnectRTMContext(context.Background())
-}
-
-// ConnectRTM calls the "rtm.connect" endpoint and returns the provided URL and the compact Info block with a custom context.
-//
-// To have a fully managed Websocket connection, use `NewRTM`, and call `ManageConnection()` on it.
-func (api *Client) ConnectRTMContext(ctx context.Context) (info *Info, websocketURL string, err error) {
 	response := &infoResponseFull{}
-	err = post(ctx, "rtm.connect", url.Values{"token": {api.config.token}}, response, api.debug)
+	err = post("rtm.connect", url.Values{"token": {api.config.token}}, response, api.debug)
 	if err != nil {
 		return nil, "", fmt.Errorf("post: %s", err)
 	}

@@ -302,8 +302,6 @@ func (rtm *RTM) handleRawEvent(rawEvent json.RawMessage) {
 		rtm.IncomingEvents <- RTMEvent{"hello", &HelloEvent{}}
 	case "pong":
 		rtm.handlePong(rawEvent)
-	case "desktop_notification":
-		rtm.Debugln("Received desktop notification, ignoring")
 	default:
 		rtm.handleEvent(event.Type, rawEvent)
 	}

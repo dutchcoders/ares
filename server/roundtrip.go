@@ -16,6 +16,8 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/rs/xid"
+
 	"crypto/sha256"
 	"net/url"
 
@@ -300,6 +302,8 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	if err := req.ParseMultipartForm(0); err != nil {
 	}
 
+	req.Body = ioutil.NopCloser(bytes.NewReader(body))
+
 	/*
 		var body interface{}
 		if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
@@ -307,7 +311,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	*/
 
 	// TODO(nl5887): do we want to remove / hide the token?, redirect to self
-	token := ""
+	token := xid.New().String()
 	if v := req.Form.Get("token"); v != "" {
 		token = v
 	} else if v, _ := req.Cookie("token"); v != nil {
@@ -515,31 +519,35 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 
 		params.Attachments = []slack.Attachment{attachment}
 		send_message(params)
+
 	}
 
-	if req.URL.Path == "/track.png" {
-		Event(token, "email-open", "Email opened", req.Method, req.URL.String(), req.Form)
-	} else if strings.HasPrefix(req.URL.Path, "/dump") {
-		/*
-			var body interface{}
-			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
-				log.Error("Error decoding request body:", err.Error())
+	_ = Event
 
-			} else {
-				Event(token, "dump", "Dump", req.Method, req.URL.String(), body)
+	/*
+		if req.URL.Path == "/track.png" {
+			Event(token, "email-open", "Email opened", req.Method, req.URL.String(), req.Form)
+		} else if strings.HasPrefix(req.URL.Path, "/dump") {
+			/*
+				var body interface{}
+				if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+					log.Error("Error decoding request body:", err.Error())
+
+				} else {
+					Event(token, "dump", "Dump", req.Method, req.URL.String(), body)
+				}
+			*
+			Event(token, "dump", "Dump", req.Method, req.URL.String(), req.Form)
+		} else if req.URL.Path == "/parkeerformulier" {
+			if req.Method == "GET" {
+				Event(token, "url-opened", "URL opened", req.Method, req.URL.String(), req.Form)
+			} else if req.Method == "POST" {
+				Event(token, "form-filled", "Form filled", req.Method, req.URL.String(), req.Form)
 			}
-		*/
-		Event(token, "dump", "Dump", req.Method, req.URL.String(), req.Form)
-	} else if req.URL.Path == "/parkeerformulier" {
-		if req.Method == "GET" {
-			Event(token, "url-opened", "URL opened", req.Method, req.URL.String(), req.Form)
-		} else if req.Method == "POST" {
-			Event(token, "form-filled", "Form filled", req.Method, req.URL.String(), req.Form)
 		}
-	}
+	*/
 
-	if token != "" {
-	} else {
+	{
 		// what to do with this?
 		// anonymous?
 		remoteAddr := req.RemoteAddr
@@ -571,6 +579,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 			Host string `json:"host"`
 			Path string `json:"path"`
 
+			Token      string              `json:"token"`
 			Date       time.Time           `json:"date"`
 			Method     string              `json:"method,omitempty"`
 			UserAgent  string              `json:"user_agent,omitempty"`
@@ -582,6 +591,7 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 			Data       interface{}         `json:"data"`
 		}{
 			Date:       time.Now(),
+			Token:      token,
 			Method:     req.Method,
 			URL:        req.URL.String(),
 			Statuscode: statusCode,

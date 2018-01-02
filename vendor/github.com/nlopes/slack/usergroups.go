@@ -1,7 +1,6 @@
 package slack
 
 import (
-	"context"
 	"errors"
 	"net/url"
 	"strings"
@@ -40,9 +39,9 @@ type userGroupResponseFull struct {
 	SlackResponse
 }
 
-func userGroupRequest(ctx context.Context, path string, values url.Values, debug bool) (*userGroupResponseFull, error) {
+func userGroupRequest(path string, values url.Values, debug bool) (*userGroupResponseFull, error) {
 	response := &userGroupResponseFull{}
-	err := post(ctx, path, values, response, debug)
+	err := post(path, values, response, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +53,6 @@ func userGroupRequest(ctx context.Context, path string, values url.Values, debug
 
 // CreateUserGroup creates a new user group
 func (api *Client) CreateUserGroup(userGroup UserGroup) (UserGroup, error) {
-	return api.CreateUserGroupContext(context.Background(), userGroup)
-}
-
-// CreateUserGroupContext creates a new user group with a custom context
-func (api *Client) CreateUserGroupContext(ctx context.Context, userGroup UserGroup) (UserGroup, error) {
 	values := url.Values{
 		"token": {api.config.token},
 		"name":  {userGroup.Name},
@@ -76,7 +70,7 @@ func (api *Client) CreateUserGroupContext(ctx context.Context, userGroup UserGro
 		values["channels"] = []string{strings.Join(userGroup.Prefs.Channels, ",")}
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.create", values, api.debug)
+	response, err := userGroupRequest("usergroups.create", values, api.debug)
 	if err != nil {
 		return UserGroup{}, err
 	}
@@ -85,17 +79,12 @@ func (api *Client) CreateUserGroupContext(ctx context.Context, userGroup UserGro
 
 // DisableUserGroup disables an existing user group
 func (api *Client) DisableUserGroup(userGroup string) (UserGroup, error) {
-	return api.DisableUserGroupContext(context.Background(), userGroup)
-}
-
-// DisableUserGroupContext disables an existing user group with a custom context
-func (api *Client) DisableUserGroupContext(ctx context.Context, userGroup string) (UserGroup, error) {
 	values := url.Values{
 		"token":     {api.config.token},
 		"usergroup": {userGroup},
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.disable", values, api.debug)
+	response, err := userGroupRequest("usergroups.disable", values, api.debug)
 	if err != nil {
 		return UserGroup{}, err
 	}
@@ -104,17 +93,12 @@ func (api *Client) DisableUserGroupContext(ctx context.Context, userGroup string
 
 // EnableUserGroup enables an existing user group
 func (api *Client) EnableUserGroup(userGroup string) (UserGroup, error) {
-	return api.EnableUserGroupContext(context.Background(), userGroup)
-}
-
-// EnableUserGroupContext enables an existing user group with a custom context
-func (api *Client) EnableUserGroupContext(ctx context.Context, userGroup string) (UserGroup, error) {
 	values := url.Values{
 		"token":     {api.config.token},
 		"usergroup": {userGroup},
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.enable", values, api.debug)
+	response, err := userGroupRequest("usergroups.enable", values, api.debug)
 	if err != nil {
 		return UserGroup{}, err
 	}
@@ -123,16 +107,11 @@ func (api *Client) EnableUserGroupContext(ctx context.Context, userGroup string)
 
 // GetUserGroups returns a list of user groups for the team
 func (api *Client) GetUserGroups() ([]UserGroup, error) {
-	return api.GetUserGroupsContext(context.Background())
-}
-
-// GetUserGroupsContext returns a list of user groups for the team with a custom context
-func (api *Client) GetUserGroupsContext(ctx context.Context) ([]UserGroup, error) {
 	values := url.Values{
 		"token": {api.config.token},
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.list", values, api.debug)
+	response, err := userGroupRequest("usergroups.list", values, api.debug)
 	if err != nil {
 		return nil, err
 	}
@@ -141,11 +120,6 @@ func (api *Client) GetUserGroupsContext(ctx context.Context) ([]UserGroup, error
 
 // UpdateUserGroup will update an existing user group
 func (api *Client) UpdateUserGroup(userGroup UserGroup) (UserGroup, error) {
-	return api.UpdateUserGroupContext(context.Background(), userGroup)
-}
-
-// UpdateUserGroupContext will update an existing user group with a custom context
-func (api *Client) UpdateUserGroupContext(ctx context.Context, userGroup UserGroup) (UserGroup, error) {
 	values := url.Values{
 		"token":     {api.config.token},
 		"usergroup": {userGroup.ID},
@@ -163,7 +137,7 @@ func (api *Client) UpdateUserGroupContext(ctx context.Context, userGroup UserGro
 		values["description"] = []string{userGroup.Description}
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.update", values, api.debug)
+	response, err := userGroupRequest("usergroups.update", values, api.debug)
 	if err != nil {
 		return UserGroup{}, err
 	}
@@ -172,17 +146,12 @@ func (api *Client) UpdateUserGroupContext(ctx context.Context, userGroup UserGro
 
 // GetUserGroupMembers will retrieve the current list of users in a group
 func (api *Client) GetUserGroupMembers(userGroup string) ([]string, error) {
-	return api.GetUserGroupMembersContext(context.Background(), userGroup)
-}
-
-// GetUserGroupMembersContext will retrieve the current list of users in a group with a custom context
-func (api *Client) GetUserGroupMembersContext(ctx context.Context, userGroup string) ([]string, error) {
 	values := url.Values{
 		"token":     {api.config.token},
 		"usergroup": {userGroup},
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.users.list", values, api.debug)
+	response, err := userGroupRequest("usergroups.users.list", values, api.debug)
 	if err != nil {
 		return []string{}, err
 	}
@@ -191,18 +160,13 @@ func (api *Client) GetUserGroupMembersContext(ctx context.Context, userGroup str
 
 // UpdateUserGroupMembers will update the members of an existing user group
 func (api *Client) UpdateUserGroupMembers(userGroup string, members string) (UserGroup, error) {
-	return api.UpdateUserGroupMembersContext(context.Background(), userGroup, members)
-}
-
-// UpdateUserGroupMembersContext will update the members of an existing user group with a custom context
-func (api *Client) UpdateUserGroupMembersContext(ctx context.Context, userGroup string, members string) (UserGroup, error) {
 	values := url.Values{
 		"token":     {api.config.token},
 		"usergroup": {userGroup},
 		"users":     {members},
 	}
 
-	response, err := userGroupRequest(ctx, "usergroups.users.update", values, api.debug)
+	response, err := userGroupRequest("usergroups.users.update", values, api.debug)
 	if err != nil {
 		return UserGroup{}, err
 	}

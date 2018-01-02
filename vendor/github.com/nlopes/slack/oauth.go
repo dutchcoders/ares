@@ -1,7 +1,6 @@
 package slack
 
 import (
-	"context"
 	"errors"
 	"net/url"
 )
@@ -31,12 +30,7 @@ type OAuthResponse struct {
 
 // GetOAuthToken retrieves an AccessToken
 func GetOAuthToken(clientID, clientSecret, code, redirectURI string, debug bool) (accessToken string, scope string, err error) {
-	return GetOAuthTokenContext(context.Background(), clientID, clientSecret, code, redirectURI, debug)
-}
-
-// GetOAuthTokenContext retrieves an AccessToken with a custom context
-func GetOAuthTokenContext(ctx context.Context, clientID, clientSecret, code, redirectURI string, debug bool) (accessToken string, scope string, err error) {
-	response, err := GetOAuthResponseContext(ctx, clientID, clientSecret, code, redirectURI, debug)
+	response, err := GetOAuthResponse(clientID, clientSecret, code, redirectURI, debug)
 	if err != nil {
 		return "", "", err
 	}
@@ -44,10 +38,6 @@ func GetOAuthTokenContext(ctx context.Context, clientID, clientSecret, code, red
 }
 
 func GetOAuthResponse(clientID, clientSecret, code, redirectURI string, debug bool) (resp *OAuthResponse, err error) {
-	return GetOAuthResponseContext(context.Background(), clientID, clientSecret, code, redirectURI, debug)
-}
-
-func GetOAuthResponseContext(ctx context.Context, clientID, clientSecret, code, redirectURI string, debug bool) (resp *OAuthResponse, err error) {
 	values := url.Values{
 		"client_id":     {clientID},
 		"client_secret": {clientSecret},
@@ -55,7 +45,7 @@ func GetOAuthResponseContext(ctx context.Context, clientID, clientSecret, code, 
 		"redirect_uri":  {redirectURI},
 	}
 	response := &OAuthResponse{}
-	err = post(ctx, "oauth.access", values, response, debug)
+	err = post("oauth.access", values, response, debug)
 	if err != nil {
 		return nil, err
 	}

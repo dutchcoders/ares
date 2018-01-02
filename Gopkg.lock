@@ -98,6 +98,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/rs/xid"
+  packages = ["."]
+  revision = "02dd45c33376f85d1064355dc790dcc4850596b1"
+  version = "v1.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
@@ -148,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7bf0cd21615aa19849b14380f6e2191c2820ef77a1687d151c3f095b0c31584a"
+  inputs-digest = "70cc6d0b2f1b7f0f40309fc2e619e45ca3d916650775027c555c066d1c40d472"
   solver-name = "gps-cdcl"
   solver-version = 1
