@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/url"
+	"strings"
 	"time"
 
 	_ "github.com/labstack/gommon/log"
@@ -24,7 +25,16 @@ func (p *Server) indexer() {
 		panic(err)
 	}
 
-	es, err := elastic.NewClient(elastic.SetURL(p.ElasticsearchURL), elastic.SetSniff(false))
+	index := "ares"
+
+	parts := strings.Split(u.Path, "/")
+	if len(parts) == 2 {
+		index = parts[1]
+	}
+
+	u.Path = ""
+
+	es, err := elastic.NewClient(elastic.SetURL(u.String()), elastic.SetSniff(false))
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +48,7 @@ func (p *Server) indexer() {
 			docId := uuid.NewUUID()
 
 			bulk = bulk.Add(elastic.NewBulkIndexRequest().
-				Index(u.Path[1:]).
+				Index(index).
 				Type("event").
 				Id(docId.String()).
 				Doc(doc),
