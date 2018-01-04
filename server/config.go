@@ -46,9 +46,10 @@ type Action struct {
 	UserAgent   []string `toml:"user_agent"`
 	Scripts     []string `toml:"scripts"`
 
-	Regex   string `toml:"regex"`
-	Replace string `toml:"replace"`
-	File    string `toml:"file"`
+	Regex    string `toml:"regex"`
+	Replace  string `toml:"replace"`
+	Template string `toml:"template"`
+	File     string `toml:"file"`
 }
 
 func Config(val string) func(*Server) {

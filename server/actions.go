@@ -1,7 +1,9 @@
 package server
 
 import (
+	"bytes"
 	"errors"
+	"os"
 
 	"github.com/PuerkitoBio/goquery"
 
@@ -107,14 +109,34 @@ func (a *ActionRequestFile) OnRequest(req *http.Request) (*http.Request, *http.R
 		statusCode = a.StatusCode
 	}
 
+	buffer := &bytes.Buffer{}
+
+	if a.File == "" {
+	} else if file, err := os.Open(a.File); err != nil {
+	} else {
+		defer file.Close()
+
+		io.Copy(buffer, file)
+	}
+
+	if a.Template == "" {
+	} else if tmpl, err := template.ParseFiles(a.Template); err != nil {
+		log.Errorf("Error opening file: %s: %s", a.File, err.Error())
+	} else if err = tmpl.Execute(buffer, req); err != nil {
+		log.Errorf("Error opening file: %s: %s", a.File, err.Error())
+	} else {
+
+	}
+
 	resp := &http.Response{
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Header:     make(http.Header),
-		Body:       r,
-		Request:    req,
-		StatusCode: statusCode,
+		Proto:         "HTTP/1.1",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Header:        make(http.Header),
+		Body:          r,
+		Request:       req,
+		ContentLength: int64(buffer.Len()),
+		StatusCode:    statusCode,
 	}
 
 	contentType := "text/html"
@@ -127,12 +149,7 @@ func (a *ActionRequestFile) OnRequest(req *http.Request) (*http.Request, *http.R
 	go func() {
 		defer w.Close()
 
-		if tmpl, err := template.ParseFiles(a.File); err != nil {
-			log.Errorf("Error opening file: %s: %s", a.File, err.Error())
-		} else if err = tmpl.Execute(w, req); err != nil {
-			log.Errorf("Error opening file: %s: %s", a.File, err.Error())
-		} else {
-		}
+		io.Copy(w, buffer)
 	}()
 
 	return req, resp, nil
