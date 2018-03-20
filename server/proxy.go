@@ -117,7 +117,17 @@ func (c *Server) Run() {
 	var router = mux.NewRouter()
 	router.NotFoundHandler = c
 
+	m := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache:  autocert.DirCache(c.CacheDir),
+		HostPolicy: func(_ context.Context, host string) error {
+			return nil
+		},
+	}
+
 	handler := NewApacheLoggingHandler(router, log.Infof)
+
+	handler = m.HTTPHandler(handler) //.ServeHTTP
 
 	go func() {
 		a := api.New(c.db)
@@ -127,14 +137,6 @@ func (c *Server) Run() {
 	if c.ListenerTLS == "" {
 	} else {
 		log.Infof("Using cachedir: %s", c.CacheDir)
-
-		m := autocert.Manager{
-			Prompt: autocert.AcceptTOS,
-			Cache:  autocert.DirCache(c.CacheDir),
-			HostPolicy: func(_ context.Context, host string) error {
-				return nil
-			},
-		}
 
 		go func() {
 			s := &http.Server{
