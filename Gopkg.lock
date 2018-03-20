@@ -10,20 +10,20 @@
 [[projects]]
   name = "github.com/PuerkitoBio/goquery"
   packages = ["."]
-  revision = "e1271ee34c6a305e38566ecd27ae374944907ee9"
-  version = "v1.1.0"
+  revision = "09540e565986583836b5fc792fe951ec5fd201dd"
+  version = "v1.3.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/andybalholm/cascadia"
   packages = ["."]
-  revision = "349dd0209470eabd9514242c688c403c0926d266"
+  revision = "901648c87902174f774fac311d7f176f8647bdaa"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/fatih/color"
   packages = ["."]
-  revision = "570b54cabe6b8eb0bc2dfce68d964677d63b5260"
-  version = "v1.5.0"
+  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
+  version = "v1.6.0"
 
 [[projects]]
   name = "github.com/gorilla/context"
@@ -34,14 +34,20 @@
 [[projects]]
   name = "github.com/gorilla/mux"
   packages = ["."]
-  revision = "bcd8bc72b08df0f70df986b97f95590779502d31"
-  version = "v1.4.0"
+  revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
+  version = "v1.6.1"
 
 [[projects]]
   name = "github.com/labstack/gommon"
   packages = ["color","log"]
-  revision = "779b8a8b9850a97acba6a3fe20feb628c39e17c1"
-  version = "0.2.2"
+  revision = "6fe1405d73ec4bd4cd8a4ac8e2a2b2bf95d03954"
+  version = "0.2.4"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mailru/easyjson"
+  packages = [".","buffer","jlexer","jwriter"]
+  revision = "f594efddfa171111dc4349cd6e78e8f61dc7936f"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -52,8 +58,8 @@
 [[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
-  revision = "fc9e8d8ef48496124e79ae0df75490096eccf6fe"
-  version = "v0.0.2"
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/minio/cli"
@@ -82,8 +88,8 @@
 [[projects]]
   name = "github.com/patrickmn/go-cache"
   packages = ["."]
-  revision = "1881a9bccb818787f68c52bfba648c6cf34c34fa"
-  version = "v2.0.0"
+  revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
+  version = "v2.1.0"
 
 [[projects]]
   name = "github.com/pborman/uuid"
@@ -119,19 +125,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert"]
-  revision = "558b6879de74bc843225cde5686419267ff707ca"
+  revision = "c3a3ad6d03f7a915c0f7e194b7152974bb73d287"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["html","html/atom","proxy","websocket"]
-  revision = "f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f"
+  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "396c9fc8fb0ce27fc7a1ff136dc5af797bba258a"
+  revision = "7ceb54c8418b8f9cdf0177b511d5cbb06e9fae39"
 
 [[projects]]
   branch = "v3"
@@ -148,8 +154,8 @@
 [[projects]]
   name = "gopkg.in/olivere/elastic.v5"
   packages = [".","config","uritemplates"]
-  revision = "edbef41beaacc2ee95e61af8faff04e67c01e268"
-  version = "v5.0.45"
+  revision = "dbe820f35164384c998099db63481b583d53f73b"
+  version = "v5.0.66"
 
 [solve-meta]
   analyzer-name = "dep"
