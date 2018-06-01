@@ -874,6 +874,10 @@ func (t *Server) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	} else {
 	}
 
+	resp.Header.Set("Access-Control-Allow-Origin", "*")
+	resp.Header.Del("X-Permitted-Cross-Domain-Policies")
+	resp.Header.Del("Strict-Transport-Security")
+
 	// rewrite cookie domains
 	for i, line := range resp.Header["Set-Cookie"] {
 		c := parseCookie(line)
