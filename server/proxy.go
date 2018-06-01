@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/patrickmn/go-cache"
+	cache "github.com/patrickmn/go-cache"
 
 	"net/url"
 
@@ -97,7 +97,8 @@ func New(options ...func(*Server)) *Server {
 		},
 	}
 
-	if db, err := database.Open(p.config.MongoURL); err != nil {
+	if p.config.MongoURL == "" {
+	} else if db, err := database.Open(p.config.MongoURL); err != nil {
 		panic(err)
 	} else {
 		p.db = db
